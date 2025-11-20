@@ -4,7 +4,7 @@ PropertyList-1.0.dtd">
 <plist version="1.0">
   <dict>
     <key>startURL</key>
-    <string>https://dva128.christian-aberg.workers.dev/seb-desktop</string>
+    <string>https://dva128-seb.pages.dev/seb-desktop-popup.html</string>
     <key>showMenuBar</key>
     <false/>
     <key>browserViewMode</key>
