@@ -11,11 +11,19 @@
             margin: 0;
             padding: 0;
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            /* Lighter top -> Darker bottom with slight rotation */
+            
+            /* Background Gradient */
             background: linear-gradient(170deg, #84B9E1 0%, #2472B2 100%);
             background-repeat: no-repeat;
             background-attachment: fixed;
-            overflow: hidden;
+            
+            overflow: hidden; /* No scrolling */
+            
+            /* --- DISABLE TEXT SELECTION --- */
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* IE10+/Edge */
+            user-select: none;         /* Standard */
         }
 
         /* --- Desktop Icons --- */
@@ -34,6 +42,8 @@
             margin-bottom: 25px;
             width: 80px;
             cursor: pointer;
+            /* Ensure no dragging of the link element itself */
+            -webkit-user-drag: none; 
         }
 
         .icon-emoji {
@@ -54,13 +64,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.05); /* Very faint tint */
+            background: rgba(0, 0, 0, 0.05);
             z-index: 999;
             display: flex;
             align-items: center;
             justify-content: center;
             
-            /* This creates the blur effect on the desktop behind the overlay */
+            /* Blur effect on the desktop */
             backdrop-filter: blur(5px); 
             -webkit-backdrop-filter: blur(5px);
         }
@@ -68,14 +78,13 @@
         /* --- Windows 7 Glass Window Style --- */
         .win7-window {
             width: 400px;
-            /* Thinner glass frame */
-            padding: 8px; 
+            padding: 8px; /* Thin frame */
             border-radius: 8px;
 
-            /* 1. Base Glass Color */
+            /* Base Glass Color */
             background-color: rgba(20, 140, 220, 0.5); 
             
-            /* 2. The "Shiny" Gradient (White top -> transparent bottom) */
+            /* Shiny Gradient Overlay */
             background-image: linear-gradient(
                 to bottom, 
                 rgba(255, 255, 255, 0.6) 0%, 
@@ -84,11 +93,10 @@
                 rgba(255, 255, 255, 0.0) 100%
             );
 
-            /* 3. Inner Blur for the glass itself */
+            /* Glass Blur */
             backdrop-filter: blur(10px); 
             -webkit-backdrop-filter: blur(10px);
             
-            /* Borders and Shadows for depth */
             box-shadow: 
                 inset 0 0 0 1px rgba(255, 255, 255, 0.5), /* Inner white highlight */
                 0 10px 25px rgba(0, 0, 0, 0.5); /* Drop shadow */
@@ -106,7 +114,6 @@
             align-items: center;
             font-size: 15px;
             color: #222;
-            /* Recessed look */
             box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.1); 
         }
 
