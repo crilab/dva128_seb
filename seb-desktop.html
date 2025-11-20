@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desktop Simulation</title>
+    <style>
+        :root {
+            --bg-color: #008080;
+            --win-gray: #c0c0c0;
+            --win-blue: #000080;
+            --win-text: #000000;
+            --win-white: #ffffff;
+            --border-light: #ffffff;
+            --border-dark: #808080;
+            --border-black: #000000;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+        }
+
+        body.dragging iframe {
+            pointer-events: none;
+        }
+        
+        .ghost-border {
+            position: absolute;
+            border: 2px dotted #444;
+            background: rgba(255, 255, 255, 0.2);
+            z-index: 999999; 
+        }
+
+        #desktop {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: flex-start;
+            transition: opacity 0.3s;
+        }
+
+        #desktop.disabled {
+            pointer-events: none;
+            opacity: 0.5;
+            filter: grayscale(0.8);
+        }
+
+        .icon {
+            width: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px;
+            border: 1px solid transparent;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .icon:hover {
+            border: 1px dotted white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .icon-img {
+            font-size: 40px;
+            margin-bottom: 5px;
+        }
+
+        .icon-text {
+            font-size: 14px;
+            text-align: center;
+            word-wrap: break-word;
+        }
+
+        .window {
+            position: absolute;
+            background-color: var(--win-gray);
+            border-top: 2px solid var(--border-light);
+            border-left: 2px solid var(--border-light);
+            border-right: 2px solid var(--border-black);
+            border-bottom: 2px solid var(--border-black);
+            box-shadow: 2px 2px 0px var(--border-dark);
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+            min-height: 150px;
+            padding: 2px;
+        }
+
+        .title-bar {
+            background-color: var(--win-blue);
+            color: white;
+            padding: 2px 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-style: italic;
+            font-size: 14px;
+            cursor: default;
+        }
+
+        .title-bar-text {
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            pointer-events: none;
+        }
+
+        .title-bar-controls {
+            display: flex;
+            gap: 2px;
+        }
+
+        .control-btn {
+            width: 16px;
+            height: 16px;
+            background-color: var(--win-gray);
+            border-top: 1px solid var(--border-light);
+            border-left: 1px solid var(--border-light);
+            border-right: 1px solid var(--border-black);
+            border-bottom: 1px solid var(--border-black);
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            cursor: pointer;
+            font-family: monospace;
+            line-height: 1;
+            font-style: normal;
+            font-weight: normal;
+        }
+
+        .control-btn:active {
+            border-top: 1px solid var(--border-black);
+            border-left: 1px solid var(--border-black);
+            border-right: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-light);
+            padding-top: 1px;
+            padding-left: 1px;
+        }
+
+        .window-content {
+            flex-grow: 1;
+            position: relative;
+            margin-top: 2px;
+            border-top: 2px solid var(--border-dark);
+            border-left: 2px solid var(--border-dark);
+            border-right: 2px solid var(--border-light);
+            border-bottom: 2px solid var(--border-light);
+            background: white;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        .resizer {
+            position: absolute;
+            z-index: 100;
+        }
+        .resizer-r { cursor: e-resize; right: -5px; top: 0; width: 10px; height: 100%; }
+        .resizer-b { cursor: s-resize; bottom: -5px; left: 0; height: 10px; width: 100%; }
+        .resizer-br { cursor: se-resize; right: -5px; bottom: -5px; width: 15px; height: 15px; }
+
+        .window.active {
+            z-index: 1000;
+        }
+        
+        .title-bar.active {
+            background-color: var(--win-blue);
+        }
+        
+        .window:not(.active) .title-bar {
+            background-color: var(--border-dark);
+        }
+
+        #startup-modal {
+            width: 300px;
+            height: auto;
+            min-height: auto;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 99999;
+        }
+
+        #startup-modal .window-content {
+            background-color: var(--win-gray);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .win-btn {
+            background-color: var(--win-gray);
+            border-top: 1px solid var(--border-light);
+            border-left: 1px solid var(--border-light);
+            border-right: 1px solid var(--border-black);
+            border-bottom: 1px solid var(--border-black);
+            box-shadow: 1px 1px 0px 0px black;
+            padding: 4px 20px;
+            min-width: 70px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+        
+        .win-btn:active {
+            border-top: 1px solid var(--border-black);
+            border-left: 1px solid var(--border-black);
+            border-right: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-light);
+            box-shadow: none;
+            transform: translate(1px, 1px);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="desktop" class="disabled">
+        <div class="icon" onclick="openApp('Python', 'https://d10hvfsk2slz73.cloudfront.net/Pyodide-IDE/index.html', '🐍')">
+            <div class="icon-img">🐍</div>
+            <div class="icon-text">Python</div>
+        </div>
+
+        <div class="icon" onclick="openApp('Portal', 'https://crilab.github.io/dva128_tentamensportal/', '📝')">
+            <div class="icon-img">📝</div>
+            <div class="icon-text">Portal</div>
+        </div>
+    </div>
+
+    <div id="startup-modal" class="window active">
+        <div class="title-bar active">
+            <div class="title-bar-text">Exam Instructions</div>
+            <div class="title-bar-controls"></div>
+        </div>
+        <div class="window-content">
+            <div style="font-size: 50px;">👨‍🏫</div>
+            <div>Wait for grading teacher to start the exam.</div>
+            <button class="win-btn" onclick="unlockDesktop()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        let zIndexCounter = 100;
+
+        function unlockDesktop() {
+            const modal = document.getElementById('startup-modal');
+            const desktop = document.getElementById('desktop');
+            if(modal) modal.remove(); 
+            if(desktop) desktop.classList.remove('disabled');
+        }
+
+        function checkIframeFocus() {
+            if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+                const win = document.activeElement.closest('.window');
+                if (win) {
+                    if(!win.classList.contains('active')) {
+                        setActive(win);
+                    }
+                }
+            }
+        }
+
+        setInterval(checkIframeFocus, 50); 
+
+        window.addEventListener('blur', () => {
+            setTimeout(checkIframeFocus, 0);
+        });
+
+
+        function handleWindowInteraction(win) {
+            if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+                document.activeElement.blur();
+            }
+            setActive(win);
+        }
+
+        function openApp(title, url, icon) {
+            const win = document.createElement('div');
+            win.classList.add('window', 'active');
+            win.style.left = (50 + (zIndexCounter % 10) * 20) + 'px';
+            win.style.top = (50 + (zIndexCounter % 10) * 20) + 'px';
+            win.style.width = '800px';
+            win.style.height = '600px';
+            win.style.zIndex = ++zIndexCounter;
+
+            win.innerHTML = `
+                <div class="title-bar active">
+                    <div class="title-bar-text">${icon} ${title}</div>
+                    <div class="title-bar-controls">
+                        <div class="control-btn max-btn" onclick="toggleMaximize(this)">▢</div>
+                        <div class="control-btn close-btn" onclick="closeWindow(this)">✕</div>
+                    </div>
+                </div>
+                <div class="window-content">
+                    <iframe src="${url}"></iframe>
+                </div>
+                <div class="resizer resizer-r"></div>
+                <div class="resizer resizer-b"></div>
+                <div class="resizer resizer-br"></div>
+            `;
+
+            document.body.appendChild(win);
+            setupWindowEvents(win);
+            setActive(win);
+        }
+
+        function closeWindow(btn) {
+            const win = btn.closest('.window');
+            win.remove();
+        }
+
+        function toggleMaximize(btn) {
+            const win = btn.closest('.window');
+            handleWindowInteraction(win);
+
+            if (win.classList.contains('maximized')) {
+                win.classList.remove('maximized');
+                win.style.width = win.dataset.prevWidth;
+                win.style.height = win.dataset.prevHeight;
+                win.style.top = win.dataset.prevTop;
+                win.style.left = win.dataset.prevLeft;
+            } else {
+                win.dataset.prevWidth = win.style.width;
+                win.dataset.prevHeight = win.style.height;
+                win.dataset.prevTop = win.style.top;
+                win.dataset.prevLeft = win.style.left;
+                
+                win.classList.add('maximized');
+                win.style.top = '0';
+                win.style.left = '0';
+                win.style.width = '100%';
+                win.style.height = '100%';
+            }
+        }
+
+        function setActive(win) {
+            document.querySelectorAll('.window').forEach(w => {
+                w.classList.remove('active');
+                w.querySelector('.title-bar').classList.remove('active');
+            });
+            
+            win.classList.add('active');
+            win.querySelector('.title-bar').classList.add('active');
+            win.style.zIndex = ++zIndexCounter;
+        }
+
+        function createGhost(rect) {
+            const ghost = document.createElement('div');
+            ghost.classList.add('ghost-border');
+            ghost.style.width = rect.width + 'px';
+            ghost.style.height = rect.height + 'px';
+            ghost.style.top = rect.top + 'px';
+            ghost.style.left = rect.left + 'px';
+            document.body.appendChild(ghost);
+            return ghost;
+        }
+
+        function setupWindowEvents(win) {
+            const titleBar = win.querySelector('.title-bar');
+            
+            win.addEventListener('mousedown', (e) => {
+                if (!titleBar.contains(e.target) && !e.target.classList.contains('resizer')) {
+                    handleWindowInteraction(win);
+                }
+            });
+
+            titleBar.addEventListener('mousedown', (e) => {
+                if(e.target.classList.contains('control-btn')) return; 
+                if(win.classList.contains('maximized')) return; 
+
+                e.preventDefault();
+                document.body.classList.add('dragging');
+
+                const rect = win.getBoundingClientRect();
+                const shiftX = e.clientX - rect.left;
+                const shiftY = e.clientY - rect.top;
+
+                const ghost = createGhost(rect);
+
+                function onMouseMove(e) {
+                    let newTop = e.clientY - shiftY;
+                    let newLeft = e.clientX - shiftX;
+                    if (newTop < 0) newTop = 0;
+
+                    ghost.style.top = newTop + 'px';
+                    ghost.style.left = newLeft + 'px';
+                }
+
+                function onMouseUp() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    document.body.classList.remove('dragging');
+
+                    win.style.top = ghost.style.top;
+                    win.style.left = ghost.style.left;
+                    ghost.remove();
+
+                    handleWindowInteraction(win);
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            const resizers = win.querySelectorAll('.resizer');
+            resizers.forEach(resizer => {
+                resizer.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    document.body.classList.add('dragging');
+                    
+                    const rect = win.getBoundingClientRect();
+                    const ghost = createGhost(rect);
+                    
+                    const startX = e.clientX;
+                    const startY = e.clientY;
+                    const startWidth = rect.width;
+                    const startHeight = rect.height;
+
+                    function onResize(e) {
+                        if(resizer.classList.contains('resizer-r') || resizer.classList.contains('resizer-br')) {
+                            ghost.style.width = (startWidth + e.clientX - startX) + 'px';
+                        }
+                        if(resizer.classList.contains('resizer-b') || resizer.classList.contains('resizer-br')) {
+                            ghost.style.height = (startHeight + e.clientY - startY) + 'px';
+                        }
+                    }
+
+                    function stopResize() {
+                        document.removeEventListener('mousemove', onResize);
+                        document.removeEventListener('mouseup', stopResize);
+                        document.body.classList.remove('dragging');
+
+                        win.style.width = ghost.style.width;
+                        win.style.height = ghost.style.height;
+                        ghost.remove();
+
+                        handleWindowInteraction(win);
+                    }
+
+                    document.addEventListener('mousemove', onResize);
+                    document.addEventListener('mouseup', stopResize);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
