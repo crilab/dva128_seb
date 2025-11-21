@@ -52,7 +52,7 @@ def on_resize(event):
     refit_terminal()
 
 @when("message", window)
-def handle_msg(event):
+def run_python(event):
     __terminal__.clear()
     __terminal__.focus()
     try:
