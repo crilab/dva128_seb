@@ -54,6 +54,7 @@ def on_resize(event):
 @when("message", window)
 def handle_msg(event):
     __terminal__.clear()
+    __terminal__.focus()
     try:
         exec(event.data, {})
     except Exception:
