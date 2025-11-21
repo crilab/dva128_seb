@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        <style>
+            html, body, py-terminal {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgb(25, 26, 25);
+            }
+        </style>
+        <title>Pyterm</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@pyscript/core@0.7.11/dist/core.css">
+        <script type="module" src="https://cdn.jsdelivr.net/npm/@pyscript/core@0.7.11/dist/core.js"></script>
+    </head>
+    <body>
+
+<py-config>
+[js_modules.main]
+"https://cdn.jsdelivr.net/npm/@xterm/addon-fit/+esm" = "xterm_fit"
+</py-config>
+
+<script type="py" terminal worker>
+from pyscript import js_modules, when, window, ffi
+import traceback
+
+### MONKEY PATCH START ###
+import builtins
+_original_input = builtins.input
+def _safe_input(prompt=""):
+    return _original_input(prompt)
+builtins.input = _safe_input
+### MONKEY PATCH END ###
+
+addon = js_modules.xterm_fit.FitAddon.new()
+
+__terminal__.loadAddon(addon)
+__terminal__.options = ffi.to_js({"fontSize": 12})
+
+def refit_terminal():
+    addon.fit()
+
+def post_ready():
+    window.parent.postMessage('READY', "*")
+
+@when("resize", window)
+def on_resize(event):
+    pass
+    refit_terminal()
+
+@when("message", window)
+def handle_msg(event):
+    __terminal__.clear()
+    try:
+        exec(event.data, {})
+    except Exception:
+        RED = "\033[91m"
+        RESET = "\033[0m"
+        print(f"{RED}{traceback.format_exc()}{RESET}", end='')
+    post_ready()
+
+refit_terminal()
+post_ready()
+</script>
+    </body>
+</html>
+
