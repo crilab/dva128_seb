@@ -72,9 +72,7 @@ const workerBlob = new Blob([workerCode], { type: 'application/javascript' })
 const workerURL = URL.createObjectURL(workerBlob)
 
 window.addEventListener('message', e => {
-    window.ready = false
     window.terminal.innerHTML = ''
-
     const pythonSourceCode = e.data
     window.pyodide.postMessage(pythonSourceCode)
 })
