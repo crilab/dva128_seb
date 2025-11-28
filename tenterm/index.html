@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Playground</title>
+    
+    <!-- CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    
+    <style>
+        * { box-sizing: border-box; }
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #282a36;
+            color: #f8f8f2;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Toolbar */
+        #toolbar {
+            height: 50px;
+            background-color: #21222c;
+            border-bottom: 1px solid #44475a;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 10px;
+        }
+
+        button {
+            background-color: #50fa7b;
+            color: #282a36;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.8; }
+        button:disabled { background-color: #6272a4; cursor: not-allowed; }
+        button#btn-refresh { background-color: #8be9fd; }
+
+        #status {
+            font-size: 12px;
+            color: #6272a4;
+            margin-left: auto;
+        }
+
+        /* Main Container for Split View */
+        #main-split {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 50px);
+        }
+
+        /* Top: IDE */
+        #editor-pane {
+            height: 60%; /* Initial height */
+            min-height: 100px;
+            overflow: hidden;
+        }
+        .CodeMirror {
+            height: 100%;
+            font-size: 14px;
+        }
+
+        /* Resizer Handle */
+        #resizer {
+            height: 8px;
+            background-color: #44475a;
+            cursor: row-resize;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        #resizer::after {
+            content: "•••";
+            color: #6272a4;
+            font-size: 10px;
+            letter-spacing: 2px;
+            margin-top: -4px;
+        }
+        #resizer:hover { background-color: #6272a4; }
+
+        /* Bottom: Terminal */
+        #terminal-pane {
+            flex: 1; /* Takes remaining space */
+            min-height: 100px;
+            position: relative;
+            background-color: black;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        /* Overlay to prevent iframe capturing mouse events during drag */
+        .iframe-shield {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 20;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toolbar">
+        <button id="btn-run" disabled>Run ▶</button>
+        <button id="btn-refresh">Reset Environment ⟳</button>
+        <span id="status">Loading Pyodide...</span>
+    </div>
+
+    <div id="main-split">
+        <div id="editor-pane">
+            <textarea id="code-editor">
+# Python Playground
+import sys
+
+print(f"Hello from Python {sys.version.split()[0]}!")
+
+def calculate_squares(n):
+    return [i**2 for i in range(n)]
+
+print("Squares of first 5 numbers:")
+print(calculate_squares(5))
+</textarea>
+        </div>
+
+        <div id="resizer"></div>
+
+        <div id="terminal-pane">
+            <div class="iframe-shield"></div>
+            <!-- allow-scripts: for Pyodide. allow-same-origin: for postMessage communication -->
+            <iframe id="term-frame" src="tenterm.html" sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>
+    </div>
+
+    <!-- CodeMirror JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+
+    <script>
+        // 1. Initialize CodeMirror Editor
+        const editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
+            mode: "python",
+            theme: "dracula",
+            lineNumbers: true,
+            indentUnit: 4,
+            matchBrackets: true
+        });
+
+        // 2. Element References
+        const iframe = document.getElementById('term-frame');
+        const btnRun = document.getElementById('btn-run');
+        const btnRefresh = document.getElementById('btn-refresh');
+        const statusSpan = document.getElementById('status');
+
+        // 3. Communications with Iframe (tenterm.html)
+        let isReady = false;
+
+        window.addEventListener('message', (e) => {
+            // tenterm.html sends 'ready' when pyodide is initialized
+            if (e.data === 'ready') {
+                isReady = true;
+                btnRun.disabled = false;
+                statusSpan.textContent = 'Ready';
+                statusSpan.style.color = '#50fa7b';
+            }
+        });
+
+        btnRun.addEventListener('click', () => {
+            if(!isReady) return;
+            const code = editor.getValue();
+            // Send code to the iframe
+            iframe.contentWindow.postMessage(code, '*');
+        });
+
+        btnRefresh.addEventListener('click', () => {
+            isReady = false;
+            btnRun.disabled = true;
+            statusSpan.textContent = 'Reloading...';
+            statusSpan.style.color = '#f1fa8c';
+            // Reload iframe to clear memory/state
+            iframe.contentWindow.location.reload();
+        });
+
+        // 4. Resizable Splitter Logic
+        const resizer = document.getElementById('resizer');
+        const editorPane = document.getElementById('editor-pane');
+        const mainSplit = document.getElementById('main-split');
+        const iframeShield = document.querySelector('.iframe-shield');
+        let isDragging = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            iframeShield.style.display = 'block'; // Prevent iframe from eating mouse events
+            document.body.style.cursor = 'row-resize';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            // Calculate new height relative to the toolbar offset
+            const toolbarHeight = document.getElementById('toolbar').offsetHeight;
+            const newHeight = e.clientY - toolbarHeight;
+            const containerHeight = mainSplit.offsetHeight;
+
+            // Constrain limits (min 10%, max 90%)
+            if (newHeight > 50 && newHeight < containerHeight - 50) {
+                editorPane.style.height = `${newHeight}px`;
+                // Refresh CodeMirror layout
+                editor.refresh();
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                iframeShield.style.display = 'none';
+                document.body.style.cursor = 'default';
+            }
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="">
+<head>
+<meta charset="utf-8">
+<title>Pyterm</title>
+<style>
+html, body, #terminal {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    color: white;
+    background-color: black;
+    font-family: monospace;
+    font-size: 12px;
+}
+div {
+    white-space: pre-wrap;
+}
+</style>
+</head>
+<body>
+<div id="terminal"></div>
+<script>
+const workerCode = `
+const pyodide_url = 'https://cdn.jsdelivr.net/pyodide/v0.29.0/full/pyodide.js'
+
+importScripts(pyodide_url)
+
+function post(type, data=null) {
+    self.postMessage({type, data})
+}
+
+async function init() {
+    const pyodide = await loadPyodide()
+
+    pyodide.setStdout({ batched: msg => {
+        post('stdout', msg)
+    }})
+
+    pyodide.setStderr({ batched: msg => {
+        post('stderr', msg)
+    }})
+
+    self.onmessage = e => {
+        self.src = e.data
+        pyodide.runPython(\`
+import js
+import sys
+import traceback
+import builtins
+
+def _new_input(prompt=''):
+    raise RuntimeError('The input function is disabled for this exam.')
+builtins.input = _new_input
+
+try:
+    exec(js.self.src, {})
+except Exception:
+    print(traceback.format_exc(), file=sys.stderr)
+\`)
+        post('ready')
+    }
+
+    post('ready')
+}
+
+init()
+`
+
+const workerBlob = new Blob([workerCode], { type: 'application/javascript' })
+const workerURL = URL.createObjectURL(workerBlob)
+
+window.addEventListener('message', e => {
+    window.ready = false
+    window.terminal.innerHTML = ''
+
+    const pythonSourceCode = e.data
+    window.pyodide.postMessage(pythonSourceCode)
+})
+
+window.terminal = document.getElementById('terminal')
+
+function print(msg, stream) {
+    const div = document.createElement('div')
+    div.style.color = stream === 'stdout' ? 'white' : 'red'
+    div.innerText = msg
+    window.terminal.appendChild(div)
+    document.documentElement.scrollTop = document.documentElement.scrollHeight
+}
+
+function init() {
+    window.pyodide = new Worker(workerURL)
+    window.pyodide.onmessage = e => {
+        if (e.data.type == 'ready') {
+            window.parent.postMessage('ready', '*')
+        } else {
+            print(e.data.data, e.data.type)
+        }
+    }
+}
+
+init()
+</script>
+</body>
+</html>
+
