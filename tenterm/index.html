@@ -3,102 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Python Playground</title>
-    
-    <!-- CodeMirror CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
-    
+    <title>Python Exam IDE</title>
     <style>
-        * { box-sizing: border-box; }
+        :root {
+            --bg-color: #1e1e1e;
+            --resizer-bg: #444;
+            --resizer-hover: #50a1ff;
+            --btn-run: #28a745;
+            --btn-run-disabled: #1e5c2f;
+            --btn-restart: #dc3545;
+        }
+
         body, html {
             margin: 0;
             padding: 0;
-            height: 100%;
             width: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #282a36;
-            color: #f8f8f2;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Toolbar */
-        #toolbar {
-            height: 50px;
-            background-color: #21222c;
-            border-bottom: 1px solid #44475a;
-            display: flex;
-            align-items: center;
-            padding: 0 15px;
-            gap: 10px;
-        }
-
-        button {
-            background-color: #50fa7b;
-            color: #282a36;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        button:hover { opacity: 0.8; }
-        button:disabled { background-color: #6272a4; cursor: not-allowed; }
-        button#btn-refresh { background-color: #8be9fd; }
-
-        #status {
-            font-size: 12px;
-            color: #6272a4;
-            margin-left: auto;
-        }
-
-        /* Main Container for Split View */
-        #main-split {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            height: calc(100% - 50px);
-        }
-
-        /* Top: IDE */
-        #editor-pane {
-            height: 60%; /* Initial height */
-            min-height: 100px;
-            overflow: hidden;
-        }
-        .CodeMirror {
             height: 100%;
-            font-size: 14px;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        /* Resizer Handle */
-        #resizer {
-            height: 8px;
-            background-color: #44475a;
-            cursor: row-resize;
+        /* 
+           CRITICAL FIX: 
+           When the body has class 'is-resizing', disable mouse interaction 
+           on the iframe. This prevents the iframe from 'stealing' the mouse 
+           events, which causes the "stuck" dragging issue.
+        */
+        body.is-resizing iframe {
+            pointer-events: none;
+        }
+
+        /* Layout Container */
+        #app-container {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
+            flex-direction: column;
+            height: 100vh;
         }
-        #resizer::after {
-            content: "•••";
-            color: #6272a4;
-            font-size: 10px;
-            letter-spacing: 2px;
-            margin-top: -4px;
-        }
-        #resizer:hover { background-color: #6272a4; }
 
-        /* Bottom: Terminal */
-        #terminal-pane {
-            flex: 1; /* Takes remaining space */
-            min-height: 100px;
+        /* Top: Editor */
+        #editor-container {
+            flex-grow: 1; 
             position: relative;
+            /* min-height 0 ensures flexbox allows it to shrink below content size */
+            min-height: 0; 
+        }
+
+        #editor {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            font-size: 13px; 
+        }
+
+        /* Resizer Bar */
+        #resizer {
+            height: 8px; /* Slightly thicker for easier grabbing */
+            background-color: var(--resizer-bg);
+            cursor: ns-resize; /* North-South cursor */
+            z-index: 100;
+            transition: background-color 0.2s;
+            flex-shrink: 0; /* Prevent resizer from squishing */
+        }
+
+        #resizer:hover, body.is-resizing #resizer {
+            background-color: var(--resizer-hover);
+        }
+
+        /* Bottom: Terminal Iframe */
+        #terminal-container {
+            height: 250px; /* Initial fixed height */
+            min-height: 50px;
             background-color: black;
+            position: relative;
+            flex-shrink: 0; /* Important: Don't let flexbox auto-shrink this */
         }
 
         iframe {
@@ -108,134 +88,193 @@
             display: block;
         }
 
-        /* Overlay to prevent iframe capturing mouse events during drag */
-        .iframe-shield {
+        /* Floating Controls */
+        #controls {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            z-index: 50;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        #btn-run {
+            background-color: var(--btn-run);
+        }
+
+        #btn-run:disabled {
+            background-color: var(--btn-run-disabled);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        #btn-restart {
+            background-color: var(--btn-restart);
+        }
+        
+        /* Loading Overlay for Terminal */
+        #term-loading {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            z-index: 20;
-            display: none;
+            background: rgba(0,0,0,0.8);
+            color: #aaa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 5;
         }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="toolbar">
-        <button id="btn-run" disabled>Run ▶</button>
-        <button id="btn-refresh">Reset Environment ⟳</button>
-        <span id="status">Loading Pyodide...</span>
+    <div id="controls">
+        <button id="btn-run" disabled>Run</button>
+        <button id="btn-restart">Restart</button>
     </div>
 
-    <div id="main-split">
-        <div id="editor-pane">
-            <textarea id="code-editor">
-# Python Playground
-import sys
-
-print(f"Hello from Python {sys.version.split()[0]}!")
-
-def calculate_squares(n):
-    return [i**2 for i in range(n)]
-
-print("Squares of first 5 numbers:")
-print(calculate_squares(5))
-</textarea>
+    <div id="app-container">
+        <div id="editor-container">
+            <div id="editor"># Write your Python code here
+print("Hello from Pyterm!")
+</div>
         </div>
-
+        
         <div id="resizer"></div>
-
-        <div id="terminal-pane">
-            <div class="iframe-shield"></div>
-            <!-- allow-scripts: for Pyodide. allow-same-origin: for postMessage communication -->
-            <iframe id="term-frame" src="tenterm.html" sandbox="allow-scripts allow-same-origin"></iframe>
+        
+        <div id="terminal-container">
+            <div id="term-loading">Initializing Environment...</div>
+            <!-- Iframe injected here via JS -->
         </div>
     </div>
 
-    <!-- CodeMirror JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <!-- Ace Editor via jsDelivr -->
+    <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.32.0/src-min-noconflict/ace.min.js"></script>
 
     <script>
-        // 1. Initialize CodeMirror Editor
-        const editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
-            mode: "python",
-            theme: "dracula",
-            lineNumbers: true,
-            indentUnit: 4,
-            matchBrackets: true
-        });
+        // --- Editor Setup ---
+        ace.config.set('basePath', 'https://cdn.jsdelivr.net/npm/ace-builds@1.32.0/src-min-noconflict');
+        const editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/python");
+        editor.setShowPrintMargin(false);
 
-        // 2. Element References
-        const iframe = document.getElementById('term-frame');
+        // --- DOM Elements ---
         const btnRun = document.getElementById('btn-run');
-        const btnRefresh = document.getElementById('btn-refresh');
-        const statusSpan = document.getElementById('status');
+        const btnRestart = document.getElementById('btn-restart');
+        const terminalContainer = document.getElementById('terminal-container');
+        const termLoading = document.getElementById('term-loading');
+        let termIframe = null;
 
-        // 3. Communications with Iframe (tenterm.html)
-        let isReady = false;
+        // --- Iframe Management ---
+        function createIframe() {
+            btnRun.disabled = true;
+            btnRun.innerText = "Loading...";
+            termLoading.classList.remove('hidden');
 
+            if (termIframe) {
+                terminalContainer.removeChild(termIframe);
+            }
+
+            termIframe = document.createElement('iframe');
+            termIframe.src = './tenterm.html';
+            terminalContainer.appendChild(termIframe);
+        }
+
+        // --- Event Listeners ---
         window.addEventListener('message', (e) => {
-            // tenterm.html sends 'ready' when pyodide is initialized
             if (e.data === 'ready') {
-                isReady = true;
                 btnRun.disabled = false;
-                statusSpan.textContent = 'Ready';
-                statusSpan.style.color = '#50fa7b';
+                btnRun.innerText = "RUN";
+                termLoading.classList.add('hidden');
             }
         });
 
         btnRun.addEventListener('click', () => {
-            if(!isReady) return;
+            if (!termIframe) return;
             const code = editor.getValue();
-            // Send code to the iframe
-            iframe.contentWindow.postMessage(code, '*');
+            termIframe.contentWindow.postMessage(code, '*');
         });
 
-        btnRefresh.addEventListener('click', () => {
-            isReady = false;
-            btnRun.disabled = true;
-            statusSpan.textContent = 'Reloading...';
-            statusSpan.style.color = '#f1fa8c';
-            // Reload iframe to clear memory/state
-            iframe.contentWindow.location.reload();
+        btnRestart.addEventListener('click', () => {
+            createIframe();
         });
 
-        // 4. Resizable Splitter Logic
+        // --- Resizing Logic (Fixed) ---
         const resizer = document.getElementById('resizer');
-        const editorPane = document.getElementById('editor-pane');
-        const mainSplit = document.getElementById('main-split');
-        const iframeShield = document.querySelector('.iframe-shield');
-        let isDragging = false;
+        const appContainer = document.getElementById('app-container');
+        
+        let isResizing = false;
 
         resizer.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            iframeShield.style.display = 'block'; // Prevent iframe from eating mouse events
-            document.body.style.cursor = 'row-resize';
+            e.preventDefault(); // Prevent text selection
+            isResizing = true;
+            
+            // Add class to body to disable iframe pointer events globally while dragging
+            document.body.classList.add('is-resizing');
+            document.body.style.cursor = 'ns-resize';
         });
 
+        // Attach mousemove/up to document to catch events outside the div
         document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            
-            // Calculate new height relative to the toolbar offset
-            const toolbarHeight = document.getElementById('toolbar').offsetHeight;
-            const newHeight = e.clientY - toolbarHeight;
-            const containerHeight = mainSplit.offsetHeight;
+            if (!isResizing) return;
 
-            // Constrain limits (min 10%, max 90%)
-            if (newHeight > 50 && newHeight < containerHeight - 50) {
-                editorPane.style.height = `${newHeight}px`;
-                // Refresh CodeMirror layout
-                editor.refresh();
-            }
+            // Calculate new height for the bottom pane (Terminal)
+            const containerHeight = appContainer.offsetHeight;
+            const mouseY = e.clientY;
+            
+            // Terminal Height = Total Height - Mouse Y Position
+            let newTerminalHeight = containerHeight - mouseY;
+
+            // Constraints
+            const maxTerminalHeight = containerHeight - 50; // Keep at least 50px for editor
+            const minTerminalHeight = 50;                   // Keep at least 50px for terminal
+
+            if (newTerminalHeight > maxTerminalHeight) newTerminalHeight = maxTerminalHeight;
+            if (newTerminalHeight < minTerminalHeight) newTerminalHeight = minTerminalHeight;
+
+            // Apply height
+            terminalContainer.style.height = `${newTerminalHeight}px`;
+            
+            // Trigger Ace Editor resize so it redraws correctly
+            editor.resize();
         });
 
         document.addEventListener('mouseup', () => {
-            if (isDragging) {
-                isDragging = false;
-                iframeShield.style.display = 'none';
+            if (isResizing) {
+                isResizing = false;
+                
+                // Re-enable iframe events
+                document.body.classList.remove('is-resizing');
                 document.body.style.cursor = 'default';
+                
+                editor.resize();
             }
         });
+
+        // --- Initialization ---
+        createIframe();
+
     </script>
 </body>
 </html>
-
