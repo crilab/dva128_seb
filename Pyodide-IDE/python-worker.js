@@ -24,13 +24,13 @@ self.streams = {
 	stdout: {
 		write: str => {
 			send('STDOUT', str)
-			self.functions.sleep(0.003)
+			//self.functions.sleep(0.003)
 		}
 	},
 	stderr: {
 		write: str => {
 			send('STDERR', str)
-			self.functions.sleep(0.003)
+			//self.functions.sleep(0.003)
 		}
 	}
 }
@@ -56,13 +56,13 @@ import traceback
 import sys
 import js
 
-sys.stdin = js.streams['stdin']
-sys.stdout = js.streams['stdout']
-sys.stderr = js.streams['stderr']
+sys.stdin = js.streams.stdin
+sys.stdout = js.streams.stdout
+sys.stderr = js.streams.stderr
 
 functions = {
-	'clear': js.functions['clear'],
-	'sleep': js.functions['sleep']
+#	'clear': js.functions.clear,
+#	'sleep': js.functions.sleep
 }
 
 try:
