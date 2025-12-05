@@ -1,14 +1,8 @@
-const cdn = 'https://d10hvfsk2slz73.cloudfront.net/pyodide/0.15.0/'
-self.languagePluginUrl = cdn // remove (comment) during development
-importScripts(cdn + 'pyodide.js')
+importScripts('https://cdn.jsdelivr.net/npm/pyodide@0.29.0/pyodide.min.js')
 
 function send(type, value=null) {
 	postMessage({type, value})
 }
-
-languagePluginLoader.then(() => {
-	send('READY')
-})
 
 self.streams = {
 	stdin: {
@@ -90,3 +84,10 @@ onmessage = data => {
 	data = data.data
 	actions[data.type](data.value)
 }
+
+async function init() {
+	self.pyodide = await loadPyodide()
+	send('READY')
+}
+
+init()
