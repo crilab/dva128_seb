@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internet Explorer - API Browser</title>
+    <style>
+        /* CSS Reset & Base */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            /* Windows XP Luna Classic Colors */
+            --xp-bg: #ece9d8;
+            --xp-hover-bg: #c1d2ee;
+            --xp-hover-border: #316ac5;
+            --xp-separator-dark: #aca899;
+            --xp-separator-light: #ffffff;
+            --ie-blue: #0A246A;
+            --content-bg: #ffffff;
+            --text-color: #000000;
+        }
+
+        body {
+            font-family: Tahoma, "Trebuchet MS", sans-serif;
+            background-color: var(--xp-bg);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+        }
+
+        /* --- UI Elements (XP Style) --- */
+
+        .menu-bar {
+            display: flex;
+            padding: 2px 4px;
+            font-size: 11px;
+            background-color: var(--xp-bg);
+            border-bottom: 1px solid var(--xp-separator-light);
+            flex-shrink: 0;
+        }
+
+        .menu-item {
+            padding: 3px 6px;
+            cursor: default;
+            color: #000;
+            border: 1px solid transparent;
+        }
+
+        .menu-item:hover {
+            background-color: var(--xp-hover-bg);
+            border: 1px solid var(--xp-hover-border);
+            border-radius: 2px;
+        }
+
+        .menu-item span {
+            text-decoration: underline;
+        }
+
+        /* Toolbars */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            padding: 2px 4px;
+            background-color: var(--xp-bg);
+            border-bottom: 1px solid var(--xp-separator-dark);
+            border-top: 1px solid var(--xp-separator-light);
+            flex-shrink: 0;
+        }
+
+        /* Tighter toolbar heights */
+        .toolbar.main-nav {
+            height: 28px;
+        }
+
+        .toolbar.address-bar {
+            height: 26px;
+        }
+
+        .toolbar.links-bar {
+            height: 24px;
+            font-size: 11px;
+        }
+
+        .toolbar-label {
+            font-size: 11px;
+            color: #000;
+            margin-right: 6px;
+            margin-left: 2px;
+        }
+
+        .separator {
+            width: 2px;
+            height: 20px;
+            margin: 0 4px;
+            border-left: 1px solid var(--xp-separator-dark);
+            border-right: 1px solid var(--xp-separator-light);
+        }
+
+        /* Buttons */
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 24px; /* Reduced button height */
+            padding: 0 4px;
+            margin: 0 1px;
+            border: 1px solid transparent;
+            border-radius: 2px;
+            cursor: default;
+            font-size: 11px;
+            color: #000;
+            line-height: 1;
+        }
+
+        .btn:hover {
+            background-color: var(--xp-hover-bg);
+            border: 1px solid var(--xp-hover-border);
+        }
+
+        .btn:active {
+            background-color: #98b5e2;
+            border: 1px solid var(--xp-hover-border);
+        }
+
+        .btn svg {
+            width: 16px; /* Scaled down icons */
+            height: 16px;
+            margin-right: 3px;
+            display: block;
+        }
+
+        .btn.icon-only svg {
+            margin-right: 0;
+        }
+
+        /* Address Input */
+        .address-wrapper {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            background-color: #fff;
+            border: 1px solid #7f9db9;
+            height: 20px;
+            padding: 0 2px;
+            margin-right: 4px;
+        }
+
+        .address-icon {
+            font-size: 12px;
+            margin-right: 4px;
+        }
+
+        .address-input {
+            flex-grow: 1;
+            border: none;
+            outline: none;
+            font-family: Tahoma, sans-serif;
+            font-size: 11px;
+            color: #000;
+            width: 100%;
+        }
+
+        /* Links Bar */
+        .link-item {
+            display: flex;
+            align-items: center;
+            padding: 2px 6px;
+            margin: 0 1px;
+            cursor: default;
+            border: 1px solid transparent;
+            color: var(--ie-blue);
+        }
+
+        .link-item:hover {
+            background-color: var(--xp-hover-bg);
+            border: 1px solid var(--xp-hover-border);
+            border-radius: 2px;
+        }
+
+        .link-icon {
+            font-size: 12px;
+            margin-right: 4px;
+        }
+
+        /* Tabs */
+        .tabs-bar {
+            display: flex;
+            align-items: flex-end;
+            background-color: var(--xp-bg);
+            padding: 4px 4px 0 4px;
+            height: 26px;
+            border-bottom: 1px solid #aca899;
+            flex-shrink: 0;
+        }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--xp-bg);
+            border: 1px solid #aca899;
+            border-bottom: none;
+            border-top-left-radius: 3px;
+            border-top-right-radius: 3px;
+            padding: 2px 6px;
+            margin-right: 2px;
+            height: 22px;
+            min-width: 120px;
+            max-width: 200px;
+            font-size: 11px;
+            cursor: default;
+            color: #555;
+            box-shadow: inset 1px 1px 0px rgba(255,255,255,0.7);
+        }
+
+        .tab.active {
+            background-color: var(--content-bg);
+            border: 1px solid #aca899;
+            border-bottom: 1px solid var(--content-bg);
+            color: #000;
+            height: 23px;
+            margin-bottom: -1px;
+            z-index: 2;
+            box-shadow: none;
+        }
+
+        .tab-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+            margin-right: 6px;
+        }
+
+        .tab-close {
+            width: 12px;
+            height: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #555;
+            border-radius: 2px;
+        }
+
+        .tab-close:hover {
+            background-color: #ff9999;
+            color: #fff;
+        }
+
+        .new-tab-btn {
+            width: 24px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid transparent;
+            border-radius: 2px;
+            margin-bottom: 2px;
+            cursor: default;
+        }
+
+        .new-tab-btn:hover {
+            background-color: var(--xp-hover-bg);
+            border: 1px solid var(--xp-hover-border);
+        }
+
+        /* --- Viewport / Document Area --- */
+
+        .viewport {
+            flex-grow: 1;
+            flex-shrink: 1;
+            min-height: 0; 
+            background-color: var(--content-bg);
+            overflow: auto;
+            position: relative;
+            box-shadow: inset 1px 1px 2px rgba(0,0,0,0.2);
+            padding: 15px;
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            cursor: text;
+        }
+
+        /* API Content Styling */
+        .json-content {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            color: #333;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* Classic IE Error Page Styling */
+        .error-page {
+            font-family: Tahoma, sans-serif;
+            color: #000;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        .error-page h1 {
+            color: #003399;
+            font-size: 20px;
+            font-weight: normal;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .error-page h1::before {
+            content: 'ℹ️';
+            margin-right: 10px;
+            font-size: 24px;
+        }
+
+        .error-page p {
+            font-size: 12px;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .error-page ul {
+            font-size: 12px;
+            margin-left: 25px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .error-page hr {
+            border: 0;
+            border-top: 1px solid #ccc;
+            margin: 15px 0;
+        }
+
+        .error-page b {
+            color: #000;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Top Menu Bar -->
+    <div class="menu-bar">
+        <div class="menu-item"><span>F</span>ile</div>
+        <div class="menu-item"><span>E</span>dit</div>
+        <div class="menu-item"><span>V</span>iew</div>
+        <div class="menu-item"><span>F</span>avorites</div>
+        <div class="menu-item"><span>T</span>ools</div>
+        <div class="menu-item"><span>H</span>elp</div>
+    </div>
+
+    <!-- Navigation Toolbar -->
+    <div class="toolbar main-nav">
+        <div class="btn" title="Back" onclick="historyBack()">
+            <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="11" fill="#14933a" />
+                <path fill="#ffffff" d="M 12 7 L 7 12 L 12 17 L 12 14 L 17 14 L 17 10 L 12 10 Z" />
+            </svg>
+            Back
+        </div>
+        <div class="btn icon-only" title="Forward">
+            <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="11" fill="#14933a" opacity="0.5" />
+                <path fill="#ffffff" d="M 12 7 L 17 12 L 12 17 L 12 14 L 7 14 L 7 10 L 12 10 Z" />
+            </svg>
+        </div>
+        
+        <div class="separator"></div>
+        
+        <div class="btn icon-only" title="Stop">
+            <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="11" fill="#d9241b" />
+                <path fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" d="M 9 9 L 15 15 M 15 9 L 9 15" />
+            </svg>
+        </div>
+        <div class="btn icon-only" title="Refresh" onclick="refreshCurrentTab()">
+            <svg viewBox="0 0 24 24"><path fill="#316ac5" d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+        </div>
+        <div class="btn icon-only" title="Home">
+            <svg viewBox="0 0 24 24"><path fill="#dfa529" d="M12 3L2 12h3v8h5v-6h4v6h5v-8h3L12 3z"/></svg>
+        </div>
+    </div>
+
+    <!-- Address Bar -->
+    <div class="toolbar address-bar">
+        <div class="toolbar-label">Address</div>
+        <div class="address-wrapper">
+            <span class="address-icon">🔒</span>
+            <input type="text" id="url-input" class="address-input" onkeydown="handleEnter(event)">
+        </div>
+        <div class="btn icon-only" title="Go" onclick="navigateFromInput()" style="height: 18px; border: 1px solid #aca899; background: #e0dcd3;">
+            <svg viewBox="0 0 24 24" style="width: 12px; height: 12px; margin: 0;"><path fill="#2a843b" d="M8 5v14l11-7z"/></svg>
+        </div>
+    </div>
+
+    <!-- Links / Favorites Bar -->
+    <div class="toolbar links-bar">
+        <div class="toolbar-label" style="font-weight: bold; color: #555;">Links</div>
+        <div class="separator" style="height: 14px;"></div>
+        <div class="link-item" onclick="navigate('https://football-frenzy.s3.eu-north-1.amazonaws.com/api')">
+            <span class="link-icon">⭐</span> list_seasons
+        </div>
+        <div class="link-item" onclick="navigate('https://football-frenzy.s3.eu-north-1.amazonaws.com/api/2000')">
+            <span class="link-icon">⭐</span> get_season
+        </div>
+        <div class="link-item" onclick="navigate('https://football-frenzy.s3.eu-north-1.amazonaws.com/api/2000/03/19')">
+            <span class="link-icon">⭐</span> get_gameday
+        </div>
+    </div>
+
+    <!-- Tabs Bar -->
+    <div class="tabs-bar" id="tabs-container">
+        <!-- Tabs injected here -->
+        <div class="new-tab-btn" onclick="addNewTab()" title="New Tab">
+            <svg viewBox="0 0 16 16" width="12" height="12"><path fill="#555" d="M7 7V2h2v5h5v2H9v5H7V9H2V7h5z"/></svg>
+        </div>
+    </div>
+
+    <!-- Content Viewport -->
+    <div class="viewport" id="viewport">
+        <!-- Content injected here -->
+    </div>
+
+    <script>
+        const BASE_URL = 'https://football-frenzy.s3.eu-north-1.amazonaws.com/api';
+        
+        let tabs = [];
+        let activeTabId = null;
+        let tabCounter = 0;
+
+        const urlInput = document.getElementById('url-input');
+        const viewport = document.getElementById('viewport');
+        const tabsContainer = document.getElementById('tabs-container');
+
+        // Initialize App
+        window.onload = () => {
+            addNewTab(BASE_URL);
+        };
+
+        // Tab Management
+        function addNewTab(url = BASE_URL) {
+            const id = `tab-${tabCounter++}`;
+            const newTab = {
+                id: id,
+                url: url,
+                title: 'New Tab',
+                content: '',
+                history: [],
+            };
+            tabs.push(newTab);
+            setActiveTab(id);
+            loadUrl(url, id);
+        }
+
+        function closeTab(e, id) {
+            e.stopPropagation();
+            tabs = tabs.filter(t => t.id !== id);
+            
+            if (tabs.length === 0) {
+                addNewTab(); // Always keep at least one tab
+            } else if (activeTabId === id) {
+                setActiveTab(tabs[tabs.length - 1].id);
+            } else {
+                renderTabs();
+            }
+        }
+
+        function setActiveTab(id) {
+            activeTabId = id;
+            const activeTab = tabs.find(t => t.id === id);
+            if (activeTab) {
+                urlInput.value = activeTab.url;
+                renderTabs();
+                renderViewport();
+            }
+        }
+
+        // Navigation
+        function handleEnter(e) {
+            if (e.key === 'Enter') {
+                navigateFromInput();
+            }
+        }
+
+        function navigateFromInput() {
+            let url = urlInput.value.trim();
+            if (!url.startsWith('http')) {
+                url = 'https://' + url;
+            }
+            navigate(url);
+        }
+
+        function navigate(url) {
+            if (!activeTabId) return;
+            urlInput.value = url;
+            loadUrl(url, activeTabId);
+        }
+
+        function refreshCurrentTab() {
+            if (activeTabId) {
+                const tab = tabs.find(t => t.id === activeTabId);
+                loadUrl(tab.url, activeTabId);
+            }
+        }
+
+        function historyBack() {
+            // Basic simulation of back button going to base url for demo purposes
+            if(activeTabId) {
+                navigate(BASE_URL);
+            }
+        }
+
+        // Fetching and Rendering Data
+        async function loadUrl(url, tabId) {
+            const tab = tabs.find(t => t.id === tabId);
+            if (!tab) return;
+
+            tab.url = url;
+            if(tabId === activeTabId) urlInput.value = url;
+
+            // Enforce Base URL restriction
+            if (!url.startsWith(BASE_URL)) {
+                tab.title = 'Cannot find server';
+                tab.content = generateErrorPage();
+                if (tabId === activeTabId) renderViewport();
+                renderTabs();
+                return;
+            }
+
+            // Set loading cursor to show background activity without blinking content
+            document.body.style.cursor = 'wait';
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP Error ${response.status}`);
+                }
+                const data = await response.json();
+                
+                // Set title based on endpoint
+                let titleStr = url.replace(BASE_URL, '');
+                if(titleStr === '' || titleStr === '/') titleStr = 'api_root';
+                else titleStr = titleStr.substring(1); // remove leading slash
+                
+                tab.title = titleStr;
+                tab.content = `<pre class="json-content">${JSON.stringify(data, null, 4)}</pre>`;
+
+            } catch (error) {
+                tab.title = 'Action Canceled';
+                tab.content = generateErrorPage(true, error.message);
+            }
+
+            // Restore normal cursor
+            document.body.style.cursor = 'default';
+
+            if (tabId === activeTabId) {
+                renderTabs();
+                renderViewport();
+            }
+        }
+
+        // UI Generators
+        function renderTabs() {
+            // Clear existing tabs (keeping the new tab button)
+            const newTabBtn = tabsContainer.querySelector('.new-tab-btn');
+            tabsContainer.innerHTML = '';
+            
+            tabs.forEach(tab => {
+                const tabEl = document.createElement('div');
+                tabEl.className = `tab ${tab.id === activeTabId ? 'active' : ''}`;
+                tabEl.onclick = () => setActiveTab(tab.id);
+                
+                tabEl.innerHTML = `
+                    <div class="tab-title" title="${tab.title}">${tab.title}</div>
+                    <div class="tab-close" onclick="closeTab(event, '${tab.id}')">✖</div>
+                `;
+                tabsContainer.appendChild(tabEl);
+            });
+            
+            tabsContainer.appendChild(newTabBtn);
+        }
+
+        function renderViewport() {
+            const activeTab = tabs.find(t => t.id === activeTabId);
+            if (activeTab) {
+                viewport.innerHTML = activeTab.content;
+            }
+        }
+
+        function generateErrorPage(isFetchError = false, msg = "") {
+            if (isFetchError) {
+                return `
+                    <div class="error-page">
+                        <h1>Navigation Canceled</h1>
+                        <p>The application encountered an error while trying to fetch the API data.</p>
+                        <hr>
+                        <ul>
+                            <li><b>Error Details:</b> ${msg}</li>
+                            <li>Ensure you are connected to the internet.</li>
+                            <li>The remote server might be rejecting requests due to CORS or it might be down.</li>
+                        </ul>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="error-page">
+                    <h1>The page cannot be displayed</h1>
+                    <p>The page you are looking for is outside the allowed domain boundaries for this examination environment.</p>
+                    <hr>
+                    <p>Please try the following:</p>
+                    <ul>
+                        <li>Ensure the Address begins exactly with: <br><br><b>${BASE_URL}</b><br><br></li>
+                        <li>Use the Bookmarks in the Links bar to navigate to allowed endpoints.</li>
+                        <li>Click the Back button to try another link.</li>
+                    </ul>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
