@@ -44,6 +44,7 @@
             padding: 2px 4px;
             font-size: 11px;
             background-color: var(--xp-bg);
+            /* Highlight line at the bottom of the menu bar */
             border-bottom: 1px solid var(--xp-separator-light);
             flex-shrink: 0;
         }
@@ -71,12 +72,13 @@
             align-items: center;
             padding: 2px 4px;
             background-color: var(--xp-bg);
-            border-bottom: 1px solid var(--xp-separator-dark);
-            border-top: 1px solid var(--xp-separator-light);
+            /* Dark shadow on top matches the light highlight from the previous bar to form a 3D ridge */
+            border-top: 1px solid var(--xp-separator-dark);
+            /* Light highlight on the bottom */
+            border-bottom: 1px solid var(--xp-separator-light);
             flex-shrink: 0;
         }
 
-        /* Tighter toolbar heights */
         .toolbar.main-nav {
             height: 28px;
         }
@@ -97,6 +99,7 @@
             margin-left: 2px;
         }
 
+        /* Vertical Separators */
         .separator {
             width: 2px;
             height: 20px;
@@ -110,7 +113,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 24px; /* Reduced button height */
+            height: 24px;
             padding: 0 4px;
             margin: 0 1px;
             border: 1px solid transparent;
@@ -132,7 +135,7 @@
         }
 
         .btn svg {
-            width: 16px; /* Scaled down icons */
+            width: 16px;
             height: 16px;
             margin-right: 3px;
             display: block;
@@ -198,7 +201,10 @@
             background-color: var(--xp-bg);
             padding: 4px 4px 0 4px;
             height: 26px;
-            border-bottom: 1px solid #aca899;
+            /* Top border continues the exact same 3D ridge consistency */
+            border-top: 1px solid var(--xp-separator-dark);
+            /* Bottom dark border outlines the tab structure and sits above the document window */
+            border-bottom: 1px solid var(--xp-separator-dark);
             flex-shrink: 0;
         }
 
@@ -207,7 +213,7 @@
             align-items: center;
             justify-content: space-between;
             background-color: var(--xp-bg);
-            border: 1px solid #aca899;
+            border: 1px solid var(--xp-separator-dark);
             border-bottom: none;
             border-top-left-radius: 3px;
             border-top-right-radius: 3px;
@@ -224,7 +230,7 @@
 
         .tab.active {
             background-color: var(--content-bg);
-            border: 1px solid #aca899;
+            border: 1px solid var(--xp-separator-dark);
             border-bottom: 1px solid var(--content-bg);
             color: #000;
             height: 23px;
