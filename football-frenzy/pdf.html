@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Viewer</title>
+    <style>
+        /* CSS Reset & Base */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            /* Windows XP Luna Classic Colors */
+            --xp-bg: #ece9d8;
+            --xp-hover-bg: #c1d2ee;
+            --xp-hover-border: #316ac5;
+            --xp-separator-dark: #aca899;
+            --xp-separator-light: #ffffff;
+            --pdf-bg: #525659;
+            --text-color: #222222;
+        }
+
+        body {
+            font-family: Tahoma, "Trebuchet MS", sans-serif;
+            background-color: var(--xp-bg);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            /* Disable selection globally */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+        }
+
+        /* --- UI Elements (XP Style) --- */
+
+        .menu-bar {
+            display: flex;
+            padding: 2px 4px;
+            font-size: 11px;
+            background-color: var(--xp-bg);
+            border-bottom: 1px solid var(--xp-separator-light);
+        }
+
+        .menu-item {
+            padding: 3px 6px;
+            cursor: default;
+            color: #000;
+            border: 1px solid transparent;
+        }
+
+        .menu-item:hover {
+            background-color: var(--xp-hover-bg);
+            border: 1px solid var(--xp-hover-border);
+            border-radius: 2px;
+        }
+
+        .menu-item span {
+            text-decoration: underline;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            padding: 3px 4px;
+            background-color: var(--xp-bg);
+            border-bottom: 1px solid #d4d0c8;
+            border-top: 1px solid var(--xp-separator-dark);
+            height: 32px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
+
+        .separator {
+            width: 2px;
+            height: 20px;
+            margin: 0 4px;
+            border-left: 1px solid var(--xp-separator-dark);
+            border-right: 1px solid var(--xp-separator-light);
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            margin: 0 1px;
+            border: 1px solid transparent;
+            border-radius: 2px;
+            cursor: default;
+        }
+
+        .btn:hover {
+            background-color: var(--xp-hover-bg);
+            border: 1px solid var(--xp-hover-border);
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* XP Style Inputs */
+        .toolbar-input-group {
+            display: flex;
+            align-items: center;
+            font-size: 11px;
+            margin: 0 4px;
+        }
+
+        .toolbar-input {
+            width: 30px;
+            height: 18px;
+            border: 1px solid #7f9db9;
+            margin: 0 4px;
+            text-align: center;
+            font-family: Tahoma, sans-serif;
+            font-size: 11px;
+        }
+
+        .toolbar-dropdown {
+            height: 18px;
+            border: 1px solid #7f9db9;
+            font-family: Tahoma, sans-serif;
+            font-size: 11px;
+            margin: 0 4px;
+            padding-left: 2px;
+        }
+
+        /* --- PDF Viewer Area --- */
+
+        .pdf-viewport {
+            flex-grow: 1;
+            background-color: var(--pdf-bg);
+            overflow: auto;
+            position: relative;
+            padding: 20px;
+            /* Inner shadow to mimic Acrobat window depth */
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .pdf-page {
+            background-color: #ffffff;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 750px;
+            min-height: 1000px; /* Force page proportion */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0,0,0,0.2);
+            padding: 50px 60px;
+            
+            /* Enable selection ONLY inside the document */
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            cursor: text;
+        }
+
+        /* --- Document Typography & Styling --- */
+
+        .document-content {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12.5px; /* Pretty small font */
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+
+        .document-content h1 {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #dddddd;
+            color: #111;
+        }
+
+        .document-content h2 {
+            font-size: 15px;
+            font-weight: bold;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .document-content p {
+            margin-bottom: 15px;
+        }
+
+        .document-content code {
+            font-family: Consolas, "Courier New", monospace;
+            background-color: #f4f4f4;
+            padding: 1px 4px;
+            border: 1px solid #e0e0e0;
+            border-radius: 2px;
+            font-size: 11.5px;
+        }
+
+        .document-content pre {
+            font-family: Consolas, "Courier New", monospace;
+            background-color: #f8f9fa;
+            border: 1px solid #d1d5da;
+            padding: 12px;
+            border-radius: 3px;
+            margin-bottom: 18px;
+            overflow-x: auto;
+            font-size: 11.5px;
+            line-height: 1.5;
+            white-space: pre-wrap; /* Keeps formatting but wraps if needed */
+        }
+
+        /* Syntax Highlighting */
+        .syn-keyword { color: #0000ff; font-weight: bold; }
+        .syn-string { color: #a31515; }
+        .syn-func { color: #795e26; }
+        .syn-builtin { color: #0070c1; }
+        .syn-comment { color: #008000; font-style: italic; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Top Menu Bar -->
+    <div class="menu-bar">
+        <div class="menu-item"><span>F</span>ile</div>
+        <div class="menu-item"><span>E</span>dit</div>
+        <div class="menu-item"><span>V</span>iew</div>
+        <div class="menu-item"><span>D</span>ocument</div>
+        <div class="menu-item"><span>T</span>ools</div>
+        <div class="menu-item"><span>W</span>indow</div>
+        <div class="menu-item"><span>H</span>elp</div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <!-- App Icon -->
+            <div class="btn" style="margin-right: 4px;">
+                <svg viewBox="0 0 16 16"><path fill="#e30613" d="M2 2l4 12c0 0 3-8 8-9-3 0-8 2-8 2L4 3z"/><path fill="#8b0000" d="M6 14s2-6 6-7c-2 0-6 1-6 7z"/></svg>
+            </div>
+            <!-- Save -->
+            <div class="btn" title="Save a Copy">
+                <svg viewBox="0 0 16 16"><path fill="#0A246A" d="M2 2v12h12V5l-3-3H2z"/><path fill="#fff" d="M4 3h7v4H4V3zm2 8h4v3H6v-3z"/></svg>
+            </div>
+            <!-- Print -->
+            <div class="btn" title="Print">
+                <svg viewBox="0 0 16 16"><path fill="#666" d="M3 2h10v4H3z"/><path fill="#333" d="M1 6h14v7H1z"/><path fill="#fff" d="M4 10h8v5H4z"/><path fill="#000" d="M5 11h6v1H5zm0 2h6v1H5z"/></svg>
+            </div>
+        </div>
+
+        <div class="separator"></div>
+
+        <div class="toolbar-group">
+            <!-- First/Prev Page -->
+            <div class="btn" title="First Page">
+                <svg viewBox="0 0 16 16"><path fill="#333" d="M4 3h2v10H4zM12 3L7 8l5 5z"/></svg>
+            </div>
+            <div class="btn" title="Previous Page">
+                <svg viewBox="0 0 16 16"><path fill="#333" d="M11 3L6 8l5 5z"/></svg>
+            </div>
+            
+            <div class="toolbar-input-group">
+                <input type="text" class="toolbar-input" value="1" readonly>
+                <span>/ 1</span>
+            </div>
+
+            <!-- Next/Last Page -->
+            <div class="btn" title="Next Page">
+                <svg viewBox="0 0 16 16"><path fill="#333" d="M5 3l5 5-5 5z"/></svg>
+            </div>
+            <div class="btn" title="Last Page">
+                <svg viewBox="0 0 16 16"><path fill="#333" d="M10 3h2v10h-2zM4 3l5 5-5 5z"/></svg>
+            </div>
+        </div>
+
+        <div class="separator"></div>
+
+        <div class="toolbar-group">
+            <!-- Zoom Out -->
+            <div class="btn" title="Zoom Out">
+                <svg viewBox="0 0 16 16"><circle cx="6" cy="6" r="4" fill="none" stroke="#333" stroke-width="1.5"/><path fill="#333" d="M9 9l4 4-1.5 1.5-4-4z"/><path fill="#333" d="M4 5.5h4v1H4z"/></svg>
+            </div>
+            
+            <select class="toolbar-dropdown">
+                <option>100%</option>
+                <option>150%</option>
+                <option>200%</option>
+                <option>Fit Width</option>
+                <option>Fit Page</option>
+            </select>
+
+            <!-- Zoom In -->
+            <div class="btn" title="Zoom In">
+                <svg viewBox="0 0 16 16"><circle cx="6" cy="6" r="4" fill="none" stroke="#333" stroke-width="1.5"/><path fill="#333" d="M9 9l4 4-1.5 1.5-4-4z"/><path fill="#333" d="M4 5.5h4v1H4z"/><path fill="#333" d="M5.5 4v4h1V4z"/></svg>
+            </div>
+        </div>
+        
+        <div class="separator"></div>
+        
+        <div class="toolbar-group">
+            <div class="btn" title="Search">
+                <svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4" fill="#a4d1ff" stroke="#000" stroke-width="1"/><path fill="#333" d="M10 10l4 4-1.5 1.5-4-4z"/><path fill="#fff" d="M5 5Q7 4 8 6" stroke="#fff" fill="none"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Viewer Area -->
+    <div class="pdf-viewport">
+        <div class="pdf-page">
+            <div class="document-content">
+                
+                <h1>Important information about Football Frenzy</h1>
+
+                <p>Prior to the examination, you are expected to be familiar with the Football Frenzy API. But if you need to, you can explore the API using the built-in web browser.</p>
+
+                <h2>Requests in Python Runner</h2>
+
+                <p>In Python Runner, you import and use <code>requests</code> as follows:</p>
+
+<!-- Syntax Highlighted Python Block -->
+<pre><span class="syn-keyword">from</span> pyodide.http <span class="syn-keyword">import</span> pyxhr <span class="syn-keyword">as</span> requests 
+ 
+url = <span class="syn-string">'https://football-frenzy.s3.eu-north-1.amazonaws.com/api'</span> 
+ 
+r = requests.get(url) 
+ 
+<span class="syn-builtin">print</span>(r.json())</pre>
+
+                <h2>Assignment</h2>
+
+                <p>Write a program where the user enters a year and the number of goals for the home and away teams.</p>
+
+<!-- Console Block -->
+<pre>STAT EXPLORER 
+************* 
+ 
+Enter year: 2000 
+ 
+Home score: 1 
+ 
+Away score: 1</pre>
+
+                <p>Your program should then fetch and display all matches from the entered year that ended with that exact score. The output must be neatly formatted, including the date, team names, and scores, as shown below:</p>
+
+<!-- Console Block 2 -->
+<pre>[04/02/2000] (1) Boras - Norrkoping (1) 
+ 
+[04/09/2000] (1) Helsingborg - Stockholm (1) 
+ 
+[04/09/2000] (1) Umea - Sollentuna (1) 
+ 
+...etc...</pre>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
