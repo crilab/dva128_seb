@@ -1,9 +1,9 @@
-// Workaround: SEB (Windows/CEF) fails to trigger Ace's render cycle on paste until the next keypress.
-editor.textInput.getElement().addEventListener('paste', (e) => {
-    const text = (e.clipboardData || window.clipboardData)?.getData('text');
-    if (text) {
-        e.preventDefault();
-        editor.insert(text);
-        editor.renderer.update(true);
+// Workaround: SEB pastes into Ace's hidden input without firing the DOM input event.
+window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'V')) {
+        setTimeout(() => {
+            const input = editor.textInput.getElement();
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        }, 10);
     }
-});
+}, true);
