@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExamOS Enterprise</title>
+    <style>
+        /* =========================================================
+           RESET & SYSTEM VARIABLES (Windows 2000 Classic Theme)
+           ========================================================= */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --win2k-desktop: #3a6ea5;
+            --win2k-bg: #d4d0c8;
+            --win2k-btn-face: #d4d0c8;
+            --win2k-btn-light: #ffffff;
+            --win2k-btn-dark: #808080;
+            --win2k-btn-darkest: #404040;
+            --win2k-title-active-left: #0a246a;
+            --win2k-title-active-right: #a6caf0;
+            --win2k-title-inactive-left: #808080;
+            --win2k-title-inactive-right: #c0c0c0;
+            --panel-height: 28px;
+        }
+
+        body {
+            font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+            font-size: 11px;
+            background-color: var(--win2k-desktop);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            position: relative;
+        }
+
+        /* Prevent iframe pointer capture issues while dragging/resizing */
+        body.is-dragging iframe {
+            pointer-events: none !important;
+        }
+
+        /* =========================================================
+           LOGON SCREEN (Animated Enterprise Experience)
+           ========================================================= */
+        #login-screen {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, #3e7bbd 0%, #27578a 55%, #16365a 100%);
+            background-size: 120% 120%;
+            animation: ambientShift 12s ease-in-out infinite alternate;
+            z-index: 200000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+
+        @keyframes ambientShift {
+            0% { background-position: 45% 45%; }
+            100% { background-position: 55% 55%; }
+        }
+
+        .login-dialog {
+            width: 420px;
+            background-color: var(--win2k-bg);
+            border: 1px solid;
+            border-color: var(--win2k-btn-light) var(--win2k-btn-darkest) var(--win2k-btn-darkest) var(--win2k-btn-light);
+            box-shadow: inset 1px 1px 0 #dfdfdf, inset -1px -1px 0 var(--win2k-btn-dark), 0 10px 30px rgba(0,0,0,0.5);
+            padding: 3px;
+            display: flex;
+            flex-direction: column;
+            animation: dialogPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes dialogPop {
+            0% { opacity: 0; transform: scale(0.97) translateY(8px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .login-title-bar {
+            height: 18px;
+            background: linear-gradient(to right, var(--win2k-title-active-left), var(--win2k-title-active-right));
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 11px;
+            padding: 2px 4px;
+            display: flex;
+            align-items: center;
+            letter-spacing: 0.3px;
+        }
+
+        /* Animated Flowing Enterprise Banner */
+        .login-banner {
+            height: 68px;
+            background: linear-gradient(125deg, #00122e 0%, #083773 25%, #0e5db7 50%, #083773 75%, #00122e 100%);
+            background-size: 300% 300%;
+            animation: bannerShimmer 9s ease infinite;
+            border-bottom: 2px solid;
+            border-color: var(--win2k-btn-dark) var(--win2k-btn-light) var(--win2k-btn-light) var(--win2k-btn-dark);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 14px;
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes bannerShimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Light sheen streak across banner */
+        .login-banner::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 50%;
+            height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(25deg);
+            animation: lightSheen 6s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        @keyframes lightSheen {
+            0%, 25% { left: -60%; }
+            70%, 100% { left: 130%; }
+        }
+
+        /* Copyright-Free Custom ExamOS Enterprise Emblem */
+        .emblem-wrapper {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 0 5px rgba(0, 180, 255, 0.4));
+            animation: emblemPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes emblemPulse {
+            0%, 100% { filter: drop-shadow(0 0 4px rgba(0, 180, 255, 0.35)); }
+            50% { filter: drop-shadow(0 0 10px rgba(100, 220, 255, 0.75)); }
+        }
+
+        .banner-text-group {
+            display: flex;
+            flex-direction: column;
+            z-index: 2;
+        }
+
+        .banner-title {
+            font-size: 19px;
+            font-weight: bold;
+            font-family: "Trebuchet MS", Tahoma, sans-serif;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+            line-height: 1.1;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+        }
+
+        .banner-title span {
+            background: linear-gradient(90deg, #6ec6ff, #d4f0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-style: italic;
+            font-weight: normal;
+            font-size: 14px;
+            margin-left: 5px;
+        }
+
+        .banner-subtitle {
+            font-size: 9.5px;
+            color: #cadbee;
+            letter-spacing: 0.3px;
+            margin-top: 3px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .login-body {
+            padding: 16px 18px 14px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .login-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .login-label {
+            width: 90px;
+            font-size: 11px;
+            color: #000000;
+        }
+
+        .login-input {
+            width: 275px;
+            height: 21px;
+            background: #ffffff;
+            border: 2px solid;
+            border-color: var(--win2k-btn-dark) var(--win2k-btn-light) var(--win2k-btn-light) var(--win2k-btn-dark);
+            box-shadow: inset 1px 1px 0 var(--win2k-btn-darkest);
+            font-family: Tahoma, sans-serif;
+            font-size: 11px;
+            padding: 2px 5px;
+            color: #000000;
+            outline: none;
+            cursor: default;
+        }
+
+        .login-footer {
+            display: flex;
+            justify-content: flex-end;
+            padding: 9px 18px 14px 18px;
+            border-top: 1px solid #dfdfdf;
+        }
+
+        .btn-logon {
+            min-width: 80px;
+            height: 23px;
+            background: var(--win2k-btn-face);
+            border-top: 1px solid var(--win2k-btn-light);
+            border-left: 1px solid var(--win2k-btn-light);
+            border-right: 1px solid var(--win2k-btn-darkest);
+            border-bottom: 1px solid var(--win2k-btn-darkest);
+            box-shadow: inset -1px -1px 0 var(--win2k-btn-dark);
+            font-family: Tahoma, sans-serif;
+            font-size: 11px;
+            cursor: default;
+            outline: 1px dotted #000000;
+            outline-offset: -4px;
+            transition: background-color 0.1s ease;
+        }
+
+        .btn-logon:hover {
+            background: #dedcd4;
+        }
+
+        .btn-logon:active {
+            border-top: 1px solid var(--win2k-btn-darkest);
+            border-left: 1px solid var(--win2k-btn-darkest);
+            border-right: 1px solid var(--win2k-btn-light);
+            border-bottom: 1px solid var(--win2k-btn-light);
+            box-shadow: inset 1px 1px 0 var(--win2k-btn-dark);
+            padding-top: 1px;
+            padding-left: 1px;
+        }
+
+        /* Status Transition Modal with Classic Win2k Segmented Color Loader */
+        #status-dialog {
+            width: 330px;
+            background: var(--win2k-bg);
+            border: 1px solid;
+            border-color: var(--win2k-btn-light) var(--win2k-btn-darkest) var(--win2k-btn-darkest) var(--win2k-btn-light);
+            box-shadow: inset 1px 1px 0 #dfdfdf, inset -1px -1px 0 var(--win2k-btn-dark), 0 10px 25px rgba(0,0,0,0.4);
+            padding: 3px;
+            display: none;
+            flex-direction: column;
+            animation: dialogPop 0.25s ease-out;
+        }
+
+        .status-body {
+            padding: 16px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .status-header-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-icon {
+            font-size: 26px;
+            line-height: 1;
+            animation: spinSlow 3s linear infinite;
+        }
+
+        @keyframes spinSlow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-text-title {
+            font-weight: bold;
+            font-size: 11px;
+            color: #000;
+            margin-bottom: 3px;
+        }
+
+        .status-text-sub {
+            font-size: 11px;
+            color: #444;
+        }
+
+        /* Win2k Style Marquee Progress Indicator */
+        .progress-track {
+            height: 14px;
+            background: #ffffff;
+            border: 2px solid;
+            border-color: var(--win2k-btn-dark) var(--win2k-btn-light) var(--win2k-btn-light) var(--win2k-btn-dark);
+            box-shadow: inset 1px 1px 0 var(--win2k-btn-darkest);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            position: absolute;
+            height: 100%;
+            width: 40%;
+            background: linear-gradient(90deg, #0a246a 0%, #2080e5 45%, #66d9ff 50%, #2080e5 55%, #0a246a 100%);
+            background-size: 200% 100%;
+            animation: marquee 1.25s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% { left: -45%; }
+            100% { left: 105%; }
+        }
+
+        /* =========================================================
+           TOP PANEL (Only Shows Open Windows) - UNMODIFIED
+           ========================================================= */
+        #top-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: var(--panel-height);
+            background-color: var(--win2k-bg);
+            border-bottom: 2px solid var(--win2k-btn-darkest);
+            box-shadow: inset 0 -1px 0 var(--win2k-btn-dark), inset 0 1px 0 var(--win2k-btn-light);
+            display: flex;
+            align-items: center;
+            padding: 2px 4px;
+            gap: 3px;
+            z-index: 100000;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        .taskbar-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            height: 22px;
+            width: 120px;
+            min-width: 68px;
+            max-width: 120px;
+            padding: 0 5px;
+            background: var(--win2k-btn-face);
+            border-top: 1px solid var(--win2k-btn-light);
+            border-left: 1px solid var(--win2k-btn-light);
+            border-right: 1px solid var(--win2k-btn-darkest);
+            border-bottom: 1px solid var(--win2k-btn-darkest);
+            box-shadow: inset -1px -1px 0 var(--win2k-btn-dark), inset 1px 1px 0 #dfdfdf;
+            font-size: 11px;
+            cursor: default;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-shrink: 0;
+        }
+
+        .taskbar-item span.title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .taskbar-item.active {
+            background-color: #e4e2dc;
+            background-image: radial-gradient(#d4d0c8 50%, #ffffff 50%);
+            background-size: 2px 2px;
+            border-top: 1px solid var(--win2k-btn-darkest);
+            border-left: 1px solid var(--win2k-btn-darkest);
+            border-right: 1px solid var(--win2k-btn-light);
+            border-bottom: 1px solid var(--win2k-btn-light);
+            box-shadow: inset 1px 1px 0 var(--win2k-btn-dark);
+            font-weight: bold;
+            padding-top: 1px;
+            padding-left: 6px;
+        }
+
+        /* =========================================================
+           DESKTOP AREA - UNMODIFIED
+           ========================================================= */
+        #desktop {
+            position: absolute;
+            top: var(--panel-height);
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+        }
+
+        .desktop-icons-container {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 16px 12px;
+            padding: 12px 10px;
+            height: 100%;
+        }
+
+        .desktop-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 78px;
+            text-align: center;
+            cursor: default;
+            padding: 4px;
+            border: 1px solid transparent;
+            border-radius: 2px;
+        }
+
+        .desktop-icon .emoji-icon {
+            font-size: 34px;
+            line-height: 1;
+            margin-bottom: 4px;
+            filter: drop-shadow(1px 2px 1px rgba(0,0,0,0.4));
+        }
+
+        .desktop-icon .icon-label {
+            color: #ffffff;
+            font-size: 11px;
+            padding: 1px 3px;
+            border: 1px dotted transparent;
+            text-shadow: 1px 1px 1px #000000;
+            word-break: break-word;
+            line-height: 1.2;
+        }
+
+        .desktop-icon.selected .icon-label {
+            background-color: var(--win2k-title-active-left);
+            border-color: #e0e0e0;
+            text-shadow: none;
+        }
+
+        /* =========================================================
+           WINDOWS (Win2000 Window Frame & Controls) - UNMODIFIED
+           ========================================================= */
+        .window {
+            position: absolute;
+            background-color: var(--win2k-bg);
+            border: 1px solid;
+            border-color: var(--win2k-btn-light) var(--win2k-btn-darkest) var(--win2k-btn-darkest) var(--win2k-btn-light);
+            box-shadow: inset 1px 1px 0 #dfdfdf, inset -1px -1px 0 var(--win2k-btn-dark), 2px 2px 10px rgba(0,0,0,0.25);
+            padding: 3px;
+            display: flex;
+            flex-direction: column;
+            min-width: 280px;
+            min-height: 180px;
+        }
+
+        .window-title-bar {
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1px 3px;
+            background: linear-gradient(to right, var(--win2k-title-inactive-left), var(--win2k-title-inactive-right));
+            color: #d4d0c8;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: default;
+        }
+
+        .window.active .window-title-bar {
+            background: linear-gradient(to right, var(--win2k-title-active-left), var(--win2k-title-active-right));
+            color: #ffffff;
+        }
+
+        .title-left {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            padding-right: 4px;
+        }
+
+        .title-left .win-icon {
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .title-left .win-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .window-controls {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .win-btn {
+            width: 16px;
+            height: 14px;
+            background: var(--win2k-btn-face);
+            border-top: 1px solid var(--win2k-btn-light);
+            border-left: 1px solid var(--win2k-btn-light);
+            border-right: 1px solid var(--win2k-btn-darkest);
+            border-bottom: 1px solid var(--win2k-btn-darkest);
+            box-shadow: inset -1px -1px 0 var(--win2k-btn-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Tahoma, sans-serif;
+            font-size: 9px;
+            font-weight: bold;
+            color: #000;
+            padding: 0;
+            cursor: default;
+            outline: none;
+        }
+
+        .win-btn:active {
+            border-top: 1px solid var(--win2k-btn-darkest);
+            border-left: 1px solid var(--win2k-btn-darkest);
+            border-right: 1px solid var(--win2k-btn-light);
+            border-bottom: 1px solid var(--win2k-btn-light);
+            box-shadow: inset 1px 1px 0 var(--win2k-btn-dark);
+            padding-top: 1px;
+            padding-left: 1px;
+        }
+
+        .win-btn svg {
+            width: 8px;
+            height: 8px;
+            fill: #000;
+        }
+
+        .window-body {
+            flex-grow: 1;
+            position: relative;
+            margin-top: 2px;
+            background: #ffffff;
+            border: 2px solid;
+            border-color: var(--win2k-btn-dark) var(--win2k-btn-light) var(--win2k-btn-light) var(--win2k-btn-dark);
+            box-shadow: inset 1px 1px 0 var(--win2k-btn-darkest);
+            overflow: hidden;
+        }
+
+        .window-body iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+            background-color: #ffffff;
+        }
+
+        /* ---------------------------------------------------------
+           VITAL: IFRAME SHIELD (Brings window to front on click)
+           --------------------------------------------------------- */
+        .window-body .iframe-shield {
+            position: absolute;
+            inset: 0;
+            z-index: 1000;
+            background: transparent;
+            display: block;
+        }
+
+        .window.active .window-body .iframe-shield {
+            display: none !important;
+        }
+
+        /* =========================================================
+           RESIZE HANDLES - UNMODIFIED
+           ========================================================= */
+        .resizer {
+            position: absolute;
+            z-index: 1001;
+        }
+        .resizer.r-top { top: -3px; left: 4px; right: 4px; height: 6px; cursor: n-resize; }
+        .resizer.r-bottom { bottom: -3px; left: 4px; right: 4px; height: 6px; cursor: s-resize; }
+        .resizer.r-left { left: -3px; top: 4px; bottom: 4px; width: 6px; cursor: w-resize; }
+        .resizer.r-right { right: -3px; top: 4px; bottom: 4px; width: 6px; cursor: e-resize; }
+        .resizer.r-topleft { top: -3px; left: -3px; width: 8px; height: 8px; cursor: nw-resize; }
+        .resizer.r-topright { top: -3px; right: -3px; width: 8px; height: 8px; cursor: ne-resize; }
+        .resizer.r-bottomleft { bottom: -3px; left: -3px; width: 8px; height: 8px; cursor: sw-resize; }
+        .resizer.r-bottomright { bottom: -3px; right: -3px; width: 8px; height: 8px; cursor: se-resize; }
+
+        /* =========================================================
+           DRAG SNAP PREVIEW GHOST - UNMODIFIED
+           ========================================================= */
+        #snap-ghost {
+            position: absolute;
+            pointer-events: none;
+            z-index: 99990;
+            display: none;
+            border: 2px dashed #000080;
+            background: rgba(10, 36, 106, 0.22);
+            backdrop-filter: invert(15%);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- =========================================================
+         ENTERPRISE LOGON SCREEN
+         ========================================================= -->
+    <div id="login-screen">
+        
+        <!-- Logon Dialog -->
+        <div class="login-dialog" id="login-dialog">
+            <div class="login-title-bar">
+                Log On to ExamOS
+            </div>
+            
+            <div class="login-banner">
+                <!-- Custom ExamOS Vector Emblem with Crisp Minimal Black Borders -->
+                <div class="emblem-wrapper">
+                    <svg viewBox="0 0 36 36" width="36" height="36" shape-rendering="geometricPrecision">
+                        <defs>
+                            <linearGradient id="emblemGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#00e1d9"/>
+                                <stop offset="100%" stop-color="#0066eb"/>
+                            </linearGradient>
+                            <linearGradient id="emblemGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#38b6ff"/>
+                                <stop offset="100%" stop-color="#003594"/>
+                            </linearGradient>
+                            <linearGradient id="emblemGrad3" x1="0%" y1="100%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#ffd000"/>
+                                <stop offset="100%" stop-color="#ff7b00"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- Outer Base Frame with Minimal Black Border -->
+                        <polygon points="18,2 32,10 32,26 18,34 4,26 4,10" 
+                                 fill="#001838" 
+                                 stroke="#000000" 
+                                 stroke-width="1.2" 
+                                 stroke-linejoin="round"/>
+                        
+                        <!-- Internal Gradient Outline Rim -->
+                        <polygon points="18,3.5 30.5,10.8 30.5,25.2 18,32.5 5.5,25.2 5.5,10.8" 
+                                 fill="none" 
+                                 stroke="url(#emblemGrad1)" 
+                                 stroke-width="1" 
+                                 stroke-linejoin="round"/>
+                        
+                        <!-- Top Isometric Facet with Crisp Black Border -->
+                        <polygon points="18,7 28,13 18,19 8,13" 
+                                 fill="url(#emblemGrad2)" 
+                                 stroke="#000000" 
+                                 stroke-width="1" 
+                                 stroke-linejoin="round"/>
+
+                        <!-- Right Isometric Facet with Crisp Black Border -->
+                        <polygon points="18,19 28,13 28,24 18,30" 
+                                 fill="url(#emblemGrad1)" 
+                                 stroke="#000000" 
+                                 stroke-width="1" 
+                                 stroke-linejoin="round"/>
+
+                        <!-- Left Isometric Facet with Crisp Black Border -->
+                        <polygon points="18,19 8,13 8,24 18,30" 
+                                 fill="url(#emblemGrad2)" 
+                                 stroke="#000000" 
+                                 stroke-width="1" 
+                                 stroke-linejoin="round"/>
+
+                        <!-- Central Amber Node with Crisp Black Border -->
+                        <circle cx="18" cy="19" r="3.2" 
+                                fill="url(#emblemGrad3)" 
+                                stroke="#000000" 
+                                stroke-width="1"/>
+                    </svg>
+                </div>
+
+                <div class="banner-text-group">
+                    <div class="banner-title">ExamOS<span>Enterprise</span></div>
+                    <div class="banner-subtitle">Built on ExamNT Technology</div>
+                </div>
+            </div>
+
+            <div class="login-body">
+                <div class="login-row">
+                    <span class="login-label">User name:</span>
+                    <input type="text" class="login-input" value="Exam User" readonly tabindex="-1">
+                </div>
+                <div class="login-row">
+                    <span class="login-label">Password:</span>
+                    <input type="password" class="login-input" value="LockedSecurePassword" readonly tabindex="-1">
+                </div>
+                <div class="login-row">
+                    <span class="login-label">Log on to:</span>
+                    <input type="text" class="login-input" value="EXAM-DOMAIN (secure workstation)" readonly tabindex="-1">
+                </div>
+            </div>
+
+            <div class="login-footer">
+                <button class="btn-logon" id="btn-ok">OK</button>
+            </div>
+        </div>
+
+        <!-- System Loading Transition Dialog with Dynamic Marquee -->
+        <div id="status-dialog">
+            <div class="login-title-bar">
+                ExamOS Enterprise
+            </div>
+            <div class="status-body">
+                <div class="status-header-row">
+                    <div class="status-icon">⏳</div>
+                    <div>
+                        <div class="status-text-title">Loading personal settings...</div>
+                        <div class="status-text-sub">Preparing secure examination environment</div>
+                    </div>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Top Taskbar (Only shows open windows) -->
+    <div id="top-panel"></div>
+
+    <!-- Desktop Area -->
+    <div id="desktop">
+        <div class="desktop-icons-container" id="icons-container">
+            <!-- Desktop icons rendered here -->
+        </div>
+        <!-- Snap Ghost strictly inside #desktop (never covers top panel) -->
+        <div id="snap-ghost"></div>
+    </div>
+
+    <script>
+        /* =========================================================
+           APPLICATION DEFINITIONS
+           ========================================================= */
+        const APPS = [
+            {
+                id: 'python',
+                name: 'Python',
+                icon: '🐍',
+                url: 'https://dva128-seb.pages.dev/python-runner/'
+            },
+            {
+                id: 'portal',
+                name: 'Portal',
+                icon: '🎓',
+                url: 'https://crilab.github.io/dva128_tentamensportal/'
+            },
+            {
+                id: 'browser',
+                name: 'Browser',
+                icon: '🌐',
+                url: 'https://dva128-seb.pages.dev/football-frenzy/browser'
+            },
+            {
+                id: 'pdf',
+                name: 'Football.pdf',
+                icon: '⚽',
+                url: 'https://dva128-seb.pages.dev/football-frenzy/pdf'
+            }
+        ];
+
+        /* =========================================================
+           GLOBAL STATE
+           ========================================================= */
+        let isLoggedIn = false;
+        let highestZ = 100;
+        let windowCounter = 0;
+        let windows = [];
+        let activeWindow = null;
+
+        const desktop = document.getElementById('desktop');
+        const topPanel = document.getElementById('top-panel');
+        const snapGhost = document.getElementById('snap-ghost');
+        const iconsContainer = document.getElementById('icons-container');
+        const loginScreen = document.getElementById('login-screen');
+        const loginDialog = document.getElementById('login-dialog');
+        const statusDialog = document.getElementById('status-dialog');
+        const btnOk = document.getElementById('btn-ok');
+
+        /* =========================================================
+           LOGON SEQUENCE
+           ========================================================= */
+        function performLogon() {
+            if (isLoggedIn) return;
+            loginDialog.style.display = 'none';
+            statusDialog.style.display = 'flex';
+
+            setTimeout(() => {
+                loginScreen.style.opacity = '0';
+                loginScreen.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    loginScreen.style.display = 'none';
+                    isLoggedIn = true;
+                }, 350);
+            }, 850);
+        }
+
+        btnOk.addEventListener('click', performLogon);
+
+        window.addEventListener('keydown', (e) => {
+            if (!isLoggedIn && e.key === 'Enter') {
+                performLogon();
+            }
+        });
+
+        /* =========================================================
+           RENDER DESKTOP ICONS
+           ========================================================= */
+        APPS.forEach(app => {
+            const iconDiv = document.createElement('div');
+            iconDiv.className = 'desktop-icon';
+            iconDiv.innerHTML = `
+                <div class="emoji-icon">${app.icon}</div>
+                <div class="icon-label">${app.name}</div>
+            `;
+
+            iconDiv.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.desktop-icon').forEach(el => el.classList.remove('selected'));
+                iconDiv.classList.add('selected');
+            });
+
+            iconDiv.addEventListener('dblclick', (e) => {
+                e.stopPropagation();
+                openWindow(app);
+            });
+
+            let lastTap = 0;
+            iconDiv.addEventListener('touchend', (e) => {
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTap;
+                if (tapLength < 350 && tapLength > 0) {
+                    openWindow(app);
+                    e.preventDefault();
+                }
+                lastTap = currentTime;
+            });
+
+            iconsContainer.appendChild(iconDiv);
+        });
+
+        desktop.addEventListener('mousedown', (e) => {
+            if (e.target === desktop || e.target === iconsContainer) {
+                document.querySelectorAll('.desktop-icon').forEach(el => el.classList.remove('selected'));
+                deactivateAllWindows();
+            }
+        });
+
+        /* =========================================================
+           MULTI-LAYER IFRAME FOCUS MONITOR
+           ========================================================= */
+        window.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+                    const winEl = document.activeElement.closest('.window');
+                    if (winEl && winEl.winInstance) {
+                        bringToFront(winEl.winInstance);
+                    }
+                }
+            }, 30);
+        });
+
+        /* =========================================================
+           WINDOW MANAGEMENT FUNCTIONS
+           ========================================================= */
+        function openWindow(app) {
+            windowCounter++;
+            const id = 'win_' + windowCounter;
+
+            const offset = (windowCounter % 8) * 26;
+            const desktopW = desktop.clientWidth;
+            const desktopH = desktop.clientHeight;
+
+            let initialW = Math.min(desktopW * 0.72, 820);
+            let initialH = Math.min(desktopH * 0.8, 560);
+            let initialX = Math.max(25, 35 + offset);
+            let initialY = Math.max(15, 25 + offset);
+
+            if (initialX + initialW > desktopW) initialX = 20;
+            if (initialY + initialH > desktopH) initialY = 15;
+
+            const winEl = document.createElement('div');
+            winEl.className = 'window active';
+            winEl.id = id;
+            winEl.style.width = initialW + 'px';
+            winEl.style.height = initialH + 'px';
+            winEl.style.left = initialX + 'px';
+            winEl.style.top = initialY + 'px';
+            winEl.style.zIndex = ++highestZ;
+
+            winEl.innerHTML = `
+                <div class="window-title-bar">
+                    <div class="title-left">
+                        <span class="win-icon">${app.icon}</span>
+                        <span class="win-text">${app.name}</span>
+                    </div>
+                    <div class="window-controls">
+                        <button class="win-btn btn-min" title="Minimize">
+                            <svg viewBox="0 0 8 8"><rect x="1" y="6" width="6" height="2"/></svg>
+                        </button>
+                        <button class="win-btn btn-max" title="Maximize">
+                            <svg class="icon-max" viewBox="0 0 8 8"><path d="M1 1h6v6H1z" fill="none" stroke="#000" stroke-width="1"/><rect x="1" y="1" width="6" height="2"/></svg>
+                        </button>
+                        <button class="win-btn btn-close" title="Close">
+                            <svg viewBox="0 0 8 8"><path d="M1 1l6 6m0-6L1 7" stroke="#000" stroke-width="1.5"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="window-body">
+                    <div class="iframe-shield"></div>
+                    <iframe src="${app.url}" allow="clipboard-read; clipboard-write; fullscreen"></iframe>
+                </div>
+                <div class="resizer r-top"></div>
+                <div class="resizer r-bottom"></div>
+                <div class="resizer r-left"></div>
+                <div class="resizer r-right"></div>
+                <div class="resizer r-topleft"></div>
+                <div class="resizer r-topright"></div>
+                <div class="resizer r-bottomleft"></div>
+                <div class="resizer r-bottomright"></div>
+            `;
+
+            desktop.appendChild(winEl);
+
+            const taskItem = document.createElement('div');
+            taskItem.className = 'taskbar-item active';
+            taskItem.innerHTML = `<span>${app.icon}</span><span class="title">${app.name}</span>`;
+            topPanel.appendChild(taskItem);
+
+            const winObj = {
+                id,
+                app,
+                el: winEl,
+                taskItem,
+                isMinimized: false,
+                isMaximized: false,
+                snapState: null,
+                preSnapRect: { x: initialX, y: initialY, w: initialW, h: initialH }
+            };
+
+            winEl.winInstance = winObj;
+            windows.push(winObj);
+
+            const shield = winEl.querySelector('.iframe-shield');
+            shield.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                bringToFront(winObj);
+            });
+
+            winEl.addEventListener('mousedown', (e) => {
+                bringToFront(winObj);
+            });
+
+            taskItem.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (winObj.isMinimized) {
+                    restoreWindow(winObj);
+                    bringToFront(winObj);
+                } else if (activeWindow === winObj) {
+                    minimizeWindow(winObj);
+                } else {
+                    bringToFront(winObj);
+                }
+            });
+
+            const minBtn = winEl.querySelector('.btn-min');
+            const maxBtn = winEl.querySelector('.btn-max');
+            const closeBtn = winEl.querySelector('.btn-close');
+
+            minBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                minimizeWindow(winObj);
+            });
+
+            maxBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMaximize(winObj);
+            });
+
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeWindow(winObj);
+            });
+
+            const titleBar = winEl.querySelector('.window-title-bar');
+            titleBar.addEventListener('dblclick', (e) => {
+                if (e.target.closest('.window-controls')) return;
+                toggleMaximize(winObj);
+            });
+
+            setupDragging(winObj);
+            setupResizing(winObj);
+            bringToFront(winObj);
+        }
+
+        /* =========================================================
+           BRING TO FRONT & FOCUS MANAGEMENT
+           ========================================================= */
+        function bringToFront(winObj) {
+            if (winObj.isMinimized) {
+                restoreWindow(winObj);
+            }
+
+            highestZ += 2;
+            winObj.el.style.zIndex = highestZ;
+
+            windows.forEach(w => {
+                w.el.classList.remove('active');
+                w.taskItem.classList.remove('active');
+            });
+
+            winObj.el.classList.add('active');
+            winObj.taskItem.classList.add('active');
+            activeWindow = winObj;
+        }
+
+        function deactivateAllWindows() {
+            windows.forEach(w => {
+                w.el.classList.remove('active');
+                w.taskItem.classList.remove('active');
+            });
+            activeWindow = null;
+        }
+
+        function minimizeWindow(winObj) {
+            winObj.el.style.display = 'none';
+            winObj.isMinimized = true;
+            winObj.el.classList.remove('active');
+            winObj.taskItem.classList.remove('active');
+
+            if (activeWindow === winObj) {
+                activeWindow = null;
+                const openWindows = windows
+                    .filter(w => !w.isMinimized)
+                    .sort((a, b) => parseInt(b.el.style.zIndex || 0) - parseInt(a.el.style.zIndex || 0));
+                if (openWindows.length > 0) {
+                    bringToFront(openWindows[0]);
+                }
+            }
+        }
+
+        function restoreWindow(winObj) {
+            winObj.el.style.display = 'flex';
+            winObj.isMinimized = false;
+        }
+
+        function closeWindow(winObj) {
+            winObj.el.remove();
+            winObj.taskItem.remove();
+            windows = windows.filter(w => w !== winObj);
+
+            if (activeWindow === winObj) {
+                activeWindow = null;
+                const openWindows = windows
+                    .filter(w => !w.isMinimized)
+                    .sort((a, b) => parseInt(b.el.style.zIndex || 0) - parseInt(a.el.style.zIndex || 0));
+                if (openWindows.length > 0) {
+                    bringToFront(openWindows[0]);
+                }
+            }
+        }
+
+        /* =========================================================
+           MAXIMIZE / RESTORE / SNAP LOGIC
+           ========================================================= */
+        function updateMaxBtnIcon(winObj) {
+            const maxBtn = winObj.el.querySelector('.btn-max');
+            if (winObj.isMaximized || winObj.snapState) {
+                maxBtn.innerHTML = `<svg viewBox="0 0 8 8"><path d="M2 1h5v5H2z" fill="none" stroke="#000" stroke-width="1"/><path d="M1 3h5v5H1z" fill="#d4d0c8" stroke="#000" stroke-width="1"/><rect x="1" y="3" width="5" height="1.5" fill="#000"/></svg>`;
+                maxBtn.title = "Restore";
+            } else {
+                maxBtn.innerHTML = `<svg viewBox="0 0 8 8"><path d="M1 1h6v6H1z" fill="none" stroke="#000" stroke-width="1"/><rect x="1" y="1" width="6" height="2"/></svg>`;
+                maxBtn.title = "Maximize";
+            }
+        }
+
+        function savePreSnapRect(winObj) {
+            if (!winObj.isMaximized && !winObj.snapState) {
+                winObj.preSnapRect = {
+                    x: parseFloat(winObj.el.style.left) || winObj.el.offsetLeft,
+                    y: parseFloat(winObj.el.style.top) || winObj.el.offsetTop,
+                    w: winObj.el.offsetWidth,
+                    h: winObj.el.offsetHeight
+                };
+            }
+        }
+
+        function applyRect(winObj, x, y, w, h) {
+            winObj.el.style.left = x + 'px';
+            winObj.el.style.top = y + 'px';
+            winObj.el.style.width = w + 'px';
+            winObj.el.style.height = h + 'px';
+        }
+
+        function toggleMaximize(winObj) {
+            if (winObj.isMaximized) {
+                applyRect(winObj, winObj.preSnapRect.x, winObj.preSnapRect.y, winObj.preSnapRect.w, winObj.preSnapRect.h);
+                winObj.isMaximized = false;
+                winObj.snapState = null;
+            } else {
+                savePreSnapRect(winObj);
+                const desktopW = desktop.clientWidth;
+                const desktopH = desktop.clientHeight;
+                applyRect(winObj, 0, 0, desktopW, desktopH);
+                winObj.isMaximized = true;
+                winObj.snapState = 'max';
+            }
+            updateMaxBtnIcon(winObj);
+            bringToFront(winObj);
+        }
+
+        function snapWindow(winObj, type) {
+            savePreSnapRect(winObj);
+            const desktopW = desktop.clientWidth;
+            const desktopH = desktop.clientHeight;
+
+            if (type === 'left') {
+                applyRect(winObj, 0, 0, desktopW / 2, desktopH);
+                winObj.snapState = 'left';
+                winObj.isMaximized = false;
+            } else if (type === 'right') {
+                applyRect(winObj, desktopW / 2, 0, desktopW / 2, desktopH);
+                winObj.snapState = 'right';
+                winObj.isMaximized = false;
+            } else if (type === 'top') {
+                applyRect(winObj, 0, 0, desktopW, desktopH);
+                winObj.snapState = 'max';
+                winObj.isMaximized = true;
+            }
+            updateMaxBtnIcon(winObj);
+            bringToFront(winObj);
+        }
+
+        /* =========================================================
+           DRAGGING & SNAPPING
+           ========================================================= */
+        function setupDragging(winObj) {
+            const titleBar = winObj.el.querySelector('.window-title-bar');
+
+            titleBar.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.window-controls')) return;
+                e.preventDefault();
+                bringToFront(winObj);
+
+                document.body.classList.add('is-dragging');
+
+                let startMouseX = e.clientX;
+                let startMouseY = e.clientY;
+                let currentSnapZone = null;
+
+                const panelHeight = topPanel.offsetHeight;
+
+                if (winObj.isMaximized || winObj.snapState) {
+                    const originalWidth = winObj.preSnapRect.w;
+                    const originalHeight = winObj.preSnapRect.h;
+                    
+                    const ratio = Math.min(Math.max(e.clientX / winObj.el.offsetWidth, 0.15), 0.85);
+
+                    winObj.isMaximized = false;
+                    winObj.snapState = null;
+                    updateMaxBtnIcon(winObj);
+
+                    winObj.el.style.width = originalWidth + 'px';
+                    winObj.el.style.height = originalHeight + 'px';
+
+                    const newLeft = e.clientX - (originalWidth * ratio);
+                    const newTop = (e.clientY - panelHeight) - 8;
+                    winObj.el.style.left = newLeft + 'px';
+                    winObj.el.style.top = Math.max(newTop, 0) + 'px';
+                }
+
+                let startWinX = parseFloat(winObj.el.style.left) || winObj.el.offsetLeft;
+                let startWinY = parseFloat(winObj.el.style.top) || winObj.el.offsetTop;
+
+                function onMouseMove(moveEvent) {
+                    const dx = moveEvent.clientX - startMouseX;
+                    const dy = moveEvent.clientY - startMouseY;
+
+                    const newX = startWinX + dx;
+                    const newY = Math.max(0, startWinY + dy);
+
+                    winObj.el.style.left = newX + 'px';
+                    winObj.el.style.top = newY + 'px';
+
+                    const desktopW = desktop.clientWidth;
+                    const desktopH = desktop.clientHeight;
+                    const cursorX = moveEvent.clientX;
+                    const cursorY = moveEvent.clientY;
+                    const threshold = 14;
+
+                    if (cursorY <= panelHeight + threshold) {
+                        currentSnapZone = 'top';
+                        showSnapGhost(0, 0, desktopW, desktopH);
+                    } else if (cursorX <= threshold) {
+                        currentSnapZone = 'left';
+                        showSnapGhost(0, 0, desktopW / 2, desktopH);
+                    } else if (cursorX >= desktopW - threshold) {
+                        currentSnapZone = 'right';
+                        showSnapGhost(desktopW / 2, 0, desktopW / 2, desktopH);
+                    } else {
+                        currentSnapZone = null;
+                        hideSnapGhost();
+                    }
+                }
+
+                function onMouseUp() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    document.body.classList.remove('is-dragging');
+                    hideSnapGhost();
+
+                    if (currentSnapZone) {
+                        snapWindow(winObj, currentSnapZone);
+                    }
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        }
+
+        function showSnapGhost(x, y, w, h) {
+            snapGhost.style.display = 'block';
+            snapGhost.style.left = x + 'px';
+            snapGhost.style.top = y + 'px';
+            snapGhost.style.width = w + 'px';
+            snapGhost.style.height = h + 'px';
+        }
+
+        function hideSnapGhost() {
+            snapGhost.style.display = 'none';
+        }
+
+        /* =========================================================
+           WINDOW RESIZING
+           ========================================================= */
+        function setupResizing(winObj) {
+            const resizers = winObj.el.querySelectorAll('.resizer');
+
+            resizers.forEach(resizer => {
+                resizer.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    bringToFront(winObj);
+
+                    document.body.classList.add('is-dragging');
+
+                    if (winObj.isMaximized || winObj.snapState) {
+                        winObj.isMaximized = false;
+                        winObj.snapState = null;
+                        updateMaxBtnIcon(winObj);
+                    }
+
+                    const startX = e.clientX;
+                    const startY = e.clientY;
+                    const startW = winObj.el.offsetWidth;
+                    const startH = winObj.el.offsetHeight;
+                    const startLeft = parseFloat(winObj.el.style.left) || winObj.el.offsetLeft;
+                    const startTop = parseFloat(winObj.el.style.top) || winObj.el.offsetTop;
+
+                    const isTop = resizer.classList.contains('r-top') || resizer.classList.contains('r-topleft') || resizer.classList.contains('r-topright');
+                    const isBottom = resizer.classList.contains('r-bottom') || resizer.classList.contains('r-bottomleft') || resizer.classList.contains('r-bottomright');
+                    const isLeft = resizer.classList.contains('r-left') || resizer.classList.contains('r-topleft') || resizer.classList.contains('r-bottomleft');
+                    const isRight = resizer.classList.contains('r-right') || resizer.classList.contains('r-topright') || resizer.classList.contains('r-bottomright');
+
+                    function onResizeMove(moveEvent) {
+                        const dx = moveEvent.clientX - startX;
+                        const dy = moveEvent.clientY - startY;
+
+                        if (isRight) {
+                            const newW = Math.max(280, startW + dx);
+                            winObj.el.style.width = newW + 'px';
+                        }
+                        if (isBottom) {
+                            const newH = Math.max(180, startH + dy);
+                            winObj.el.style.height = newH + 'px';
+                        }
+                        if (isLeft) {
+                            const newW = Math.max(280, startW - dx);
+                            if (newW > 280) {
+                                winObj.el.style.width = newW + 'px';
+                                winObj.el.style.left = (startLeft + dx) + 'px';
+                            }
+                        }
+                        if (isTop) {
+                            const newH = Math.max(180, startH - dy);
+                            if (newH > 180) {
+                                winObj.el.style.height = newH + 'px';
+                                winObj.el.style.top = Math.max(0, startTop + dy) + 'px';
+                            }
+                        }
+                    }
+
+                    function onResizeUp() {
+                        document.removeEventListener('mousemove', onResizeMove);
+                        document.removeEventListener('mouseup', onResizeUp);
+                        document.body.classList.remove('is-dragging');
+                        savePreSnapRect(winObj);
+                    }
+
+                    document.addEventListener('mousemove', onResizeMove);
+                    document.addEventListener('mouseup', onResizeUp);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
